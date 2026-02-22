@@ -97,6 +97,32 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    infoStatus: {
+      assets: {
+        type: Boolean,
+        default: false,
+      },
+      liabilities: {
+        type: Boolean,
+        default: false,
+      },
+      incomes: {
+        type: Boolean,
+        default: false,
+      },
+      expenses: {
+        type: Boolean,
+        default: false,
+      },
+      goals: {
+        type: Boolean,
+        default: false,
+      },
+      insurance: {
+        type: Boolean,
+        default: false,
+      },
+    },
   },
   { timestamps: true },
 );

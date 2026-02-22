@@ -85,6 +85,9 @@ export const updateUserProfile = handleAsync(async (req, res, next) => {
 // Post Asset
 export const postAsset = handleAsync(async (req, res, next) => {
   const asset = await Asset.create({ ...req.body, user: req.user.id });
+  const user = await User.findById(req.user.id);
+  user.infoStatus.assets = true;
+  await user.save();
   res.status(201).json({
     success: true,
     asset,
@@ -94,6 +97,9 @@ export const postAsset = handleAsync(async (req, res, next) => {
 // Post Expense
 export const postExpense = handleAsync(async (req, res, next) => {
   const expense = await Expense.create({ ...req.body, user: req.user.id });
+  const user = await User.findById(req.user.id);
+  user.infoStatus.expenses = true;
+  await user.save();
   res.status(201).json({
     success: true,
     expense,
@@ -106,6 +112,9 @@ export const postFinancialGoal = handleAsync(async (req, res, next) => {
     ...req.body,
     user: req.user.id,
   });
+  const user = await User.findById(req.user.id);
+  user.infoStatus.goals = true;
+  await user.save();
   res.status(201).json({
     success: true,
     financialGoal,
@@ -115,6 +124,9 @@ export const postFinancialGoal = handleAsync(async (req, res, next) => {
 // Post Income
 export const postIncome = handleAsync(async (req, res, next) => {
   const income = await Income.create({ ...req.body, user: req.user.id });
+  const user = await User.findById(req.user.id);
+  user.infoStatus.incomes = true;
+  await user.save();
   res.status(201).json({
     success: true,
     income,
@@ -124,6 +136,9 @@ export const postIncome = handleAsync(async (req, res, next) => {
 // Post Insurance
 export const postInsurance = handleAsync(async (req, res, next) => {
   const insurance = await Insurance.create({ ...req.body, user: req.user.id });
+  const user = await User.findById(req.user.id);
+  user.infoStatus.insurance = true;
+  await user.save();
   res.status(201).json({
     success: true,
     insurance,
@@ -133,6 +148,9 @@ export const postInsurance = handleAsync(async (req, res, next) => {
 // Post Liability
 export const postLiability = handleAsync(async (req, res, next) => {
   const liability = await Liability.create({ ...req.body, user: req.user.id });
+  const user = await User.findById(req.user.id);
+  user.infoStatus.liabilities = true;
+  await user.save();
   res.status(201).json({
     success: true,
     liability,

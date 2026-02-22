@@ -193,6 +193,25 @@ export const loginUser = handleAsync(async (req, res, next) => {
     return next(handleError(401, "Invalid email or password"));
   }
 
+  if (!!Asset.find({ user: user._id })) {
+    user.infoStatus.assets = true;
+  }
+  if (!!Liability.find({ user: user._id })) {
+    user.infoStatus.liabilities = true;
+  }
+  if (!!Income.find({ user: user._id })) {
+    user.infoStatus.incomes = true;
+  }
+  if (!!Expense.find({ user: user._id })) {
+    user.infoStatus.expenses = true;
+  }
+  if (!!Goal.find({ user: user._id })) {
+    user.infoStatus.goals = true;
+  }
+  if (!!Insurance.find({ user: user._id })) {
+    user.infoStatus.insurance = true;
+  }
+
   sendToken(user, 200, res);
 });
 
