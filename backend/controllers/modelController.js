@@ -36,7 +36,8 @@ export const healthCheck = handleAsync(async (req, res, next) => {
 
 // ─── 2. POST /api/v1/rag/ask ──────────────────────────────────────────────────
 export const ragAsk = handleAsync(async (req, res, next) => {
-  const { query, history } = req.body;
+  const { query } = req.body;
+  const history = req.user.history;
   if (!query) return next(new HandleError("query is required", 400));
 
   const result = await forwardPost("/api/v1/rag/ask", { query, history }, next);
@@ -45,7 +46,8 @@ export const ragAsk = handleAsync(async (req, res, next) => {
 
 // ─── 3. POST /api/v1/rag/retrieve ─────────────────────────────────────────────
 export const ragRetrieve = handleAsync(async (req, res, next) => {
-  const { query, history } = req.body;
+  const { query } = req.body;
+  const history = req.user.history;
   if (!query) return next(new HandleError("query is required", 400));
 
   const result = await forwardPost(
@@ -58,28 +60,101 @@ export const ragRetrieve = handleAsync(async (req, res, next) => {
 
 // ─── 4. POST /api/v1/score/financial-health ───────────────────────────────────
 export const financialHealthScore = handleAsync(async (req, res, next) => {
-  const {
-    user_id,
-    annual_income,
-    incomes,
-    expenses,
-    assets,
-    liabilities,
-    insurances,
-  } = req.body;
+  const userDetails = User.findById(req.user._id);
+  const incomeDetails = Income.find({ user: req.user._id });
+  const expenseDetails = Expense.find({ user: req.user._id });
+  const assetDetails = Asset.find({ user: req.user._id });
+  const liabilityDetails = Liability.find({ user: req.user._id });
+  const insuranceDetails = Insurance.find({ user: req.user._id });
+  const financialGoalDetails = FinancialGoal.find({ user: req.user._id });
 
-  if (!user_id) return next(new HandleError("user_id is required", 400));
+  const user = {
+    name: userDetails.name,
+    age: userDetails.age,
+    gender: userDetails.gender,
+    address: userDetails.address,
+    city: userDetails.city,
+    state: userDetails.state,
+    zip: userDetails.zip,
+    country: userDetails.country,
+    maritalStatus: userDetails.maritalStatus,
+    dependents: userDetails.dependents,
+    employmentType: userDetails.employmentType,
+    annualIncome: userDetails.annualIncome,
+    riskProfile: userDetails.riskProfile,
+  };
+
+  const incomes = (incomeDetails || []).map((income) => ({
+    sourceType: income.sourceType,
+    monthlyAmount: income.monthlyAmount,
+    growthRate: income.growthRate,
+    isActive: income.isActive,
+  }));
+
+  const expenses = (expenseDetails || []).map((expense) => {
+    return {
+      category: expense.category,
+      monthlyAmount: expense.monthlyAmount,
+      type: expense.type,
+    };
+  });
+
+  const assets = (assetDetails || []).map((asset) => {
+    return {
+      type: asset.type,
+      name: asset.name,
+      currentValue: asset.currentValue,
+      investedAmount: asset.investedAmount,
+      expectedReturnRate: asset.expectedReturnRate,
+      liquidityLevel: asset.liquidityLevel,
+    };
+  });
+
+  const liabilities = (liabilityDetails || []).map((liability) => {
+    return {
+      type: liability.type,
+      principalAmount: liability.principalAmount,
+      outstandingAmount: liability.outstandingAmount,
+      interestRate: liability.interestRate,
+      emiAmount: liability.emiAmount,
+      tenureRemaining: liability.tenureRemaining,
+    };
+  });
+
+  const insurances = (insuranceDetails || []).map((insurance) => {
+    return {
+      type: insurance.type,
+      provider: insurance.provider,
+      coverageAmount: insurance.coverageAmount,
+      premiumAmount: insurance.premiumAmount,
+      maturityDate: insurance.maturityDate,
+    };
+  });
+
+  const financialGoals = (financialGoalDetails || []).map((goal) => {
+    return {
+      goalType: goal.goalType,
+      targetAmount: goal.targetAmount,
+      targetDate: goal.targetDate,
+      priorityLevel: goal.priorityLevel,
+      inflationRate: goal.inflationRate,
+      currentSavingsForGoal: goal.currentSavingsForGoal,
+      status: goal.status,
+    };
+  });
+
+  if (!user) return next(new HandleError("user is required", 400));
 
   const result = await forwardPost(
     "/api/v1/score/financial-health",
     {
-      user_id,
-      annual_income,
+      user,
       incomes,
       expenses,
       assets,
       liabilities,
       insurances,
+      financialGoals,
     },
     next,
   );
@@ -88,9 +163,49 @@ export const financialHealthScore = handleAsync(async (req, res, next) => {
 
 // ─── 5. POST /api/v1/analytics/net-worth ──────────────────────────────────────
 export const netWorthAnalysis = handleAsync(async (req, res, next) => {
-  const { userId, assets, liabilities } = req.body;
+  const userDetails = User.findById(req.user._id);
+  const assetDetails = Asset.find({ user: req.user._id });
+  const liabilityDetails = Liability.find({ user: req.user._id });
 
-  if (!userId) return next(new HandleError("userId is required", 400));
+  const user = {
+    name: userDetails.name,
+    age: userDetails.age,
+    gender: userDetails.gender,
+    address: userDetails.address,
+    city: userDetails.city,
+    state: userDetails.state,
+    zip: userDetails.zip,
+    country: userDetails.country,
+    maritalStatus: userDetails.maritalStatus,
+    dependents: userDetails.dependents,
+    employmentType: userDetails.employmentType,
+    annualIncome: userDetails.annualIncome,
+    riskProfile: userDetails.riskProfile,
+  };
+
+  const assets = (assetDetails || []).map((asset) => {
+    return {
+      type: asset.type,
+      name: asset.name,
+      currentValue: asset.currentValue,
+      investedAmount: asset.investedAmount,
+      expectedReturnRate: asset.expectedReturnRate,
+      liquidityLevel: asset.liquidityLevel,
+    };
+  });
+
+  const liabilities = (liabilityDetails || []).map((liability) => {
+    return {
+      type: liability.type,
+      principalAmount: liability.principalAmount,
+      outstandingAmount: liability.outstandingAmount,
+      interestRate: liability.interestRate,
+      emiAmount: liability.emiAmount,
+      tenureRemaining: liability.tenureRemaining,
+    };
+  });
+
+  if (!user) return next(new HandleError("user is required", 400));
 
   const result = await forwardPost(
     "/api/v1/analytics/net-worth",
@@ -102,9 +217,57 @@ export const netWorthAnalysis = handleAsync(async (req, res, next) => {
 
 // ─── 6. POST /api/v1/analytics/goal-feasibility ──────────────────────────────
 export const goalFeasibility = handleAsync(async (req, res, next) => {
-  const { userId, incomes, expenses, financialGoals } = req.body;
+  const userDetails = User.findById(req.user._id);
+  const incomeDetails = Income.find({ user: req.user._id });
+  const expenseDetails = Expense.find({ user: req.user._id });
+  const financialGoalDetails = FinancialGoal.find({ user: req.user._id });
 
-  if (!userId) return next(new HandleError("userId is required", 400));
+  const user = {
+    name: userDetails.name,
+    age: userDetails.age,
+    gender: userDetails.gender,
+    address: userDetails.address,
+    city: userDetails.city,
+    state: userDetails.state,
+    zip: userDetails.zip,
+    country: userDetails.country,
+    maritalStatus: userDetails.maritalStatus,
+    dependents: userDetails.dependents,
+    employmentType: userDetails.employmentType,
+    annualIncome: userDetails.annualIncome,
+    riskProfile: userDetails.riskProfile,
+  };
+
+  const incomes = (incomeDetails || []).map((income) => {
+    return {
+      sourceType: income.sourceType,
+      monthlyAmount: income.monthlyAmount,
+      growthRate: income.growthRate,
+      isActive: income.isActive,
+    };
+  });
+
+  const expenses = (expenseDetails || []).map((expense) => {
+    return {
+      category: expense.category,
+      monthlyAmount: expense.monthlyAmount,
+      type: expense.type,
+    };
+  });
+
+  const financialGoals = (financialGoalDetails || []).map((goal) => {
+    return {
+      goalType: goal.goalType,
+      targetAmount: goal.targetAmount,
+      targetDate: goal.targetDate,
+      priorityLevel: goal.priorityLevel,
+      inflationRate: goal.inflationRate,
+      currentSavingsForGoal: goal.currentSavingsForGoal,
+      status: goal.status,
+    };
+  });
+
+  if (!user) return next(new HandleError("user is required", 400));
 
   const result = await forwardPost(
     "/api/v1/analytics/goal-feasibility",
@@ -116,9 +279,39 @@ export const goalFeasibility = handleAsync(async (req, res, next) => {
 
 // ─── 7. POST /api/v1/analytics/portfolio-alignment ───────────────────────────
 export const portfolioAlignment = handleAsync(async (req, res, next) => {
-  const { userId, riskProfile, assets } = req.body;
+  const userDetails = User.findById(req.user._id);
+  const assetDetails = Asset.find({ user: req.user._id });
 
-  if (!userId) return next(new HandleError("userId is required", 400));
+  const user = {
+    name: userDetails.name,
+    age: userDetails.age,
+    gender: userDetails.gender,
+    address: userDetails.address,
+    city: userDetails.city,
+    state: userDetails.state,
+    zip: userDetails.zip,
+    country: userDetails.country,
+    maritalStatus: userDetails.maritalStatus,
+    dependents: userDetails.dependents,
+    employmentType: userDetails.employmentType,
+    annualIncome: userDetails.annualIncome,
+    riskProfile: userDetails.riskProfile,
+  };
+
+  const riskProfile = userDetails.riskProfile;
+
+  const assets = (assetDetails || []).map((asset) => {
+    return {
+      type: asset.type,
+      name: asset.name,
+      currentValue: asset.currentValue,
+      investedAmount: asset.investedAmount,
+      expectedReturnRate: asset.expectedReturnRate,
+      liquidityLevel: asset.liquidityLevel,
+    };
+  });
+
+  if (!user) return next(new HandleError("user is required", 400));
 
   const result = await forwardPost(
     "/api/v1/analytics/portfolio-alignment",
@@ -130,9 +323,68 @@ export const portfolioAlignment = handleAsync(async (req, res, next) => {
 
 // ─── 8. POST /api/v1/simulate/stress-test ─────────────────────────────────────
 export const stressTest = handleAsync(async (req, res, next) => {
-  const { userId, incomes, expenses, assets, liabilities } = req.body;
+  const userDetails = User.findById(req.user._id);
+  const incomeDetails = Income.find({ user: req.user._id });
+  const expenseDetails = Expense.find({ user: req.user._id });
+  const assetDetails = Asset.find({ user: req.user._id });
+  const liabilityDetails = Liability.find({ user: req.user._id });
 
-  if (!userId) return next(new HandleError("userId is required", 400));
+  const user = {
+    name: userDetails.name,
+    age: userDetails.age,
+    gender: userDetails.gender,
+    address: userDetails.address,
+    city: userDetails.city,
+    state: userDetails.state,
+    zip: userDetails.zip,
+    country: userDetails.country,
+    maritalStatus: userDetails.maritalStatus,
+    dependents: userDetails.dependents,
+    employmentType: userDetails.employmentType,
+    annualIncome: userDetails.annualIncome,
+    riskProfile: userDetails.riskProfile,
+  };
+
+  const incomes = (incomeDetails || []).map((income) => {
+    return {
+      sourceType: income.sourceType,
+      monthlyAmount: income.monthlyAmount,
+      growthRate: income.growthRate,
+      isActive: income.isActive,
+    };
+  });
+
+  const expenses = (expenseDetails || []).map((expense) => {
+    return {
+      category: expense.category,
+      monthlyAmount: expense.monthlyAmount,
+      type: expense.type,
+    };
+  });
+
+  const assets = (assetDetails || []).map((asset) => {
+    return {
+      type: asset.type,
+      name: asset.name,
+      currentValue: asset.currentValue,
+      investedAmount: asset.investedAmount,
+      expectedReturnRate: asset.expectedReturnRate,
+      liquidityLevel: asset.liquidityLevel,
+    };
+  });
+
+  const liabilities = (liabilityDetails || []).map((liability) => {
+    return {
+      type: liability.type,
+      principalAmount: liability.principalAmount,
+      outstandingAmount: liability.outstandingAmount,
+      interestRate: liability.interestRate,
+      emiAmount: liability.emiAmount,
+      tenureRemaining: liability.tenureRemaining,
+    };
+  });
+
+  if (!user) return next(new HandleError("user is required", 400));
 
   const result = await forwardPost(
     "/api/v1/simulate/stress-test",

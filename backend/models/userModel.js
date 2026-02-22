@@ -93,6 +93,10 @@ const userSchema = new mongoose.Schema(
       default: "conservative",
       enum: ["conservative", "moderate", "aggressive"],
     },
+    history: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true },
 );
