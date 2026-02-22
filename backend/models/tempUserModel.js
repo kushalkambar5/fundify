@@ -19,6 +19,11 @@ const tempUserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    purpose: {
+      type: String,
+      enum: ["registration", "passwordReset"],
+      default: "registration",
+    },
   },
   { timestamps: true },
 );
