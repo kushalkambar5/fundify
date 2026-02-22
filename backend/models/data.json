@@ -1,0 +1,84 @@
+{
+  "user": {
+    "name": { "type": "String", "required": true },
+    "age": { "type": "Number", "required": true },
+    "gender": { "type": "String", "required": true },
+    "address": { "type": "String", "required": true },
+    "city": { "type": "String", "required": true },
+    "state": { "type": "String", "required": true },
+    "zip": { "type": "String", "required": true },
+    "country": { "type": "String", "required": true },
+    "maritalStatus": { "type": "String", "required": true },
+    "dependents": { "type": "Number", "required": true },
+    "employmentType": { "type": "String", "required": true },
+    "annualIncome": { "type": "Number", "required": true },
+    "riskProfile": { "type": "String", "enum": ["conservative", "moderate", "aggressive"], "default": "conservative" }
+  },
+
+  "income":[{
+    "user": { "type": "ObjectId", "ref": "User", "required": true },
+    "sourceType": { "type": "String", "required": true, "enum": ["salary", "freelance", "investment", "rental", "business", "other"] },
+    "monthlyAmount": { "type": "Number", "required": true },
+    "growthRate": { "type": "Number", "required": true },
+    "isActive": { "type": "Boolean", "default": true }
+  }],
+
+  "expense": [{
+    "user": { "type": "ObjectId", "ref": "User", "required": true },
+    "category": { "type": "String", "required": true, "enum": ["housing", "transportation", "food", "utilities", "insurance", "healthcare", "debt", "entertainment", "rent", "emi", "other"] },
+    "monthlyAmount": { "type": "Number", "required": true },
+    "type": { "type": "String", "required": true, "enum": ["fixed", "variable"] }
+  }],
+
+  "asset": [{
+    "user": { "type": "ObjectId", "ref": "User", "required": true },
+    "type": { "type": "String", "required": true, "enum": ["stock", "mutual_fund", "crypto", "fd", "real_estate", "gold"] },
+    "name": { "type": "String", "required": true },
+    "currentValue": { "type": "Number", "required": true },
+    "investedAmount": { "type": "Number", "required": true },
+    "expectedReturnRate": { "type": "Number", "required": true },
+    "liquidityLevel": { "type": "String", "required": true, "enum": ["high", "medium", "low"] }
+  }],
+
+  "liability": [{
+    "user": { "type": "ObjectId", "ref": "User", "required": true },
+    "type": { "type": "String", "required": true, "enum": ["loan", "credit_card", "other"] },
+    "principalAmount": { "type": "Number", "required": true },
+    "outstandingAmount": { "type": "Number", "required": true },
+    "interestRate": { "type": "Number", "required": true },
+    "emiAmount": { "type": "Number", "required": true },
+    "tenureRemaining": { "type": "Number", "required": true }
+  }],
+
+  "financialGoal": [{
+    "user": { "type": "ObjectId", "ref": "User", "required": true },
+    "goalType": { "type": "String", "required": true, "enum": ["house", "retirement", "car", "travel", "emergency_fund"] },
+    "targetAmount": { "type": "Number", "required": true },
+    "targetDate": { "type": "Date", "required": true },
+    "priorityLevel": { "type": "String", "required": true, "enum": ["high", "medium", "low"] },
+    "inflationRate": { "type": "Number", "required": true },
+    "currentSavingsForGoal": { "type": "Number", "required": true },
+    "status": { "type": "String", "required": true, "enum": ["active", "achieved"] }
+  }],
+
+  "financialHealthScore": {
+    "user": { "type": "ObjectId", "ref": "User", "required": true },
+    "score": { "type": "Number", "required": true },
+    "breakdown": {
+      "savingsRate": { "type": "Number", "required": true },
+      "emergencyFund": { "type": "Number", "required": true },
+      "debtRatio": { "type": "Number", "required": true },
+      "diversification": { "type": "Number", "required": true },
+      "insuranceCoverage": { "type": "Number", "required": true }
+    }
+  },
+
+  "insurance": [{
+    "user": { "type": "ObjectId", "ref": "User", "required": true },
+    "type": { "type": "String", "required": true, "enum": ["health", "term", "vehicle"] },
+    "provider": { "type": "String", "required": true },
+    "coverageAmount": { "type": "Number", "required": true },
+    "premiumAmount": { "type": "Number", "required": true },
+    "maturityDate": { "type": "Date", "required": true }
+  }]
+}

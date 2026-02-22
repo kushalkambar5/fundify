@@ -2,3 +2,6 @@
 /frontend/node_modules
 /backend/.env
 /frontend/.env
+/model/.venv
+/model/venv
+/model/app/__pycache__
