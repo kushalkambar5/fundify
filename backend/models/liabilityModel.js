@@ -10,7 +10,7 @@ const liabilitySchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["loan", "credit_card", "other"],
+      enum: ["loan", "credit_card", "mortgage", "other"],
     },
     principalAmount: {
       type: Number,

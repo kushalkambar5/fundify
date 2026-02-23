@@ -10,7 +10,15 @@ const financialGoalSchema = new mongoose.Schema(
     goalType: {
       type: String,
       required: true,
-      enum: ["house", "retirement", "car", "travel", "emergency_fund"],
+      enum: [
+        "house",
+        "retirement",
+        "car",
+        "travel",
+        "emergency_fund",
+        "education",
+        "other",
+      ],
     },
     targetAmount: {
       type: Number,

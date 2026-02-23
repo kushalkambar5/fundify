@@ -12,6 +12,7 @@ function SectionCard({
   iconBg = "bg-blue-50",
   iconColor = "text-blue-600",
   headerAction,
+  saveBtnText,
 }) {
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm flex flex-col justify-center">
@@ -75,9 +76,11 @@ function SectionCard({
           ) : (
             <>
               <span className="material-symbols-outlined text-[18px]">
-                save
+                {saveBtnText && saveBtnText.includes("don't")
+                  ? "skip_next"
+                  : "save"}
               </span>
-              Save {title}
+              {saveBtnText || `Save ${title}`}
             </>
           )}
         </button>

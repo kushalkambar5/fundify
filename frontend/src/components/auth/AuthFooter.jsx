@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 function AuthFooter() {
   return (
@@ -7,18 +8,18 @@ function AuthFooter() {
         © 2024 Fundify Financial Intelligence. SEC Registered Advisor.
       </p>
       <div className="flex gap-8">
-        <a
+        <Link
           className="text-xs text-slate-400 font-semibold hover:text-emerald-accent transition-colors"
-          href="#"
+          to="/privacy-policy"
         >
           Privacy Policy
-        </a>
-        <a
+        </Link>
+        <Link
           className="text-xs text-slate-400 font-semibold hover:text-emerald-accent transition-colors"
-          href="#"
+          to="/terms-and-conditions"
         >
           Terms
-        </a>
+        </Link>
         <a
           className="text-xs text-slate-400 font-semibold hover:text-emerald-accent transition-colors"
           href="#"

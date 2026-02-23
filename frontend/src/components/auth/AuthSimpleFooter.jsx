@@ -8,13 +8,13 @@ function AuthSimpleFooter() {
         <p>© 2024 Fundify AI Inc. All rights reserved.</p>
         <div className="flex gap-6">
           <Link
-            to="#"
+            to="/privacy-policy"
             className="hover:text-navy dark:hover:text-white transition-colors"
           >
             Privacy Policy
           </Link>
           <Link
-            to="#"
+            to="/terms-and-conditions"
             className="hover:text-navy dark:hover:text-white transition-colors"
           >
             Terms of Service

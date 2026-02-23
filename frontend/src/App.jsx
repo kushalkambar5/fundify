@@ -6,6 +6,9 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Signup3 from "./pages/Signup3";
+import LegalPrivacy from "./pages/LegalPrivacy";
+import TermsAndConditions from "./pages/TermsAndConditions";
+import Profile from "./pages/Profile";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
@@ -24,9 +27,15 @@ function App() {
             <Route path="/" element={<RootRoute />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/privacy-policy" element={<LegalPrivacy />} />
+            <Route
+              path="/terms-and-conditions"
+              element={<TermsAndConditions />}
+            />
 
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
 
             {/* If authenticated but missing onboarding details, ProtectedRoute redirects here */}

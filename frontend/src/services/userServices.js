@@ -41,6 +41,11 @@ export const checkOnboardingStatus = async (email) => {
   return response.data;
 };
 
+export const markOnboardingStep = async (step) => {
+  const response = await axiosInstance.patch("/user/onboarding-step", { step });
+  return response.data;
+};
+
 // Modification Operations
 export const updateUserProfile = async (data) => {
   const response = await axiosInstance.put("/user/me", data);
@@ -74,5 +79,65 @@ export const addInsurance = async (data) => {
 
 export const addLiability = async (data) => {
   const response = await axiosInstance.post("/user/liability", data);
+  return response.data;
+};
+
+export const updateAsset = async (id, data) => {
+  const response = await axiosInstance.put(`/user/asset/${id}`, data);
+  return response.data;
+};
+
+export const deleteAsset = async (id) => {
+  const response = await axiosInstance.delete(`/user/asset/${id}`);
+  return response.data;
+};
+
+export const updateExpense = async (id, data) => {
+  const response = await axiosInstance.put(`/user/expense/${id}`, data);
+  return response.data;
+};
+
+export const deleteExpense = async (id) => {
+  const response = await axiosInstance.delete(`/user/expense/${id}`);
+  return response.data;
+};
+
+export const updateFinancialGoal = async (id, data) => {
+  const response = await axiosInstance.put(`/user/financial-goal/${id}`, data);
+  return response.data;
+};
+
+export const deleteFinancialGoal = async (id) => {
+  const response = await axiosInstance.delete(`/user/financial-goal/${id}`);
+  return response.data;
+};
+
+export const updateIncome = async (id, data) => {
+  const response = await axiosInstance.put(`/user/income/${id}`, data);
+  return response.data;
+};
+
+export const deleteIncome = async (id) => {
+  const response = await axiosInstance.delete(`/user/income/${id}`);
+  return response.data;
+};
+
+export const updateInsurance = async (id, data) => {
+  const response = await axiosInstance.put(`/user/insurance/${id}`, data);
+  return response.data;
+};
+
+export const deleteInsurance = async (id) => {
+  const response = await axiosInstance.delete(`/user/insurance/${id}`);
+  return response.data;
+};
+
+export const updateLiability = async (id, data) => {
+  const response = await axiosInstance.put(`/user/liability/${id}`, data);
+  return response.data;
+};
+
+export const deleteLiability = async (id) => {
+  const response = await axiosInstance.delete(`/user/liability/${id}`);
   return response.data;
 };

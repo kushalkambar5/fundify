@@ -5,12 +5,31 @@ import SectionCard from "../components/signup/SectionCard";
 import {
   updateUserProfile,
   addIncome,
+  getIncomes,
+  deleteIncome,
+  updateIncome,
   addExpense,
+  getExpenses,
+  deleteExpense,
+  updateExpense,
   addAsset,
+  getAssets,
+  deleteAsset,
+  updateAsset,
   addLiability,
+  getLiabilities,
+  deleteLiability,
+  updateLiability,
   addInsurance,
+  getInsurances,
+  deleteInsurance,
+  updateInsurance,
   addFinancialGoal,
+  getFinancialGoals,
+  deleteFinancialGoal,
+  updateFinancialGoal,
   checkOnboardingStatus,
+  markOnboardingStep,
 } from "../services/userServices";
 import { registerUser } from "../services/authServices";
 import { useAuth } from "../context/AuthContext";
@@ -60,17 +79,109 @@ function Signup3({ emailId, password }) {
     country: "India",
     employmentType: "Full-time Professional",
     annualIncome: "",
-    riskProfile: "Moderate",
+    riskProfile: "moderate",
   });
 
-  // Prefill if the user is already logged in and context contains user data
+  // Fetch all existing data if logged in
   useEffect(() => {
-    if (user) {
-      setGeneralInfo((prev) => ({
-        ...prev,
-        ...user,
-      }));
-    }
+    let isMounted = true;
+    const loadUserData = async () => {
+      if (!user) return;
+      try {
+        setGeneralInfo((prev) => ({ ...prev, ...user }));
+
+        // Parallel fetch for speed
+        const [incRes, expRes, astRes, libRes, insRes, glsRes] =
+          await Promise.all([
+            getIncomes(),
+            getExpenses(),
+            getAssets(),
+            getLiabilities(),
+            getInsurances(),
+            getFinancialGoals(),
+          ]);
+
+        if (!isMounted) return;
+
+        if (incRes.incomes && incRes.incomes.length > 0) {
+          setIncomes(
+            incRes.incomes.map((i) => ({
+              _id: i._id,
+              sourceType: i.sourceType,
+              amount: i.monthlyAmount,
+              growthRate: i.growthRate,
+            })),
+          );
+        }
+        if (expRes.expenses && expRes.expenses.length > 0) {
+          setExpenses(
+            expRes.expenses.map((e) => ({
+              _id: e._id,
+              category: e.category,
+              amount: e.monthlyAmount,
+              type: e.type,
+            })),
+          );
+        }
+        if (astRes.assets && astRes.assets.length > 0) {
+          setAssets(
+            astRes.assets.map((a) => ({
+              _id: a._id,
+              type: a.type,
+              name: a.name,
+              amount: a.currentValue,
+              investedAmount: a.investedAmount,
+              expectedReturnRate: a.expectedReturnRate,
+              liquidityLevel: a.liquidityLevel,
+            })),
+          );
+        }
+        if (libRes.liabilities && libRes.liabilities.length > 0) {
+          setLiabilities(
+            libRes.liabilities.map((l) => ({
+              _id: l._id,
+              type: l.type,
+              principalAmount: l.principalAmount,
+              outstandingAmount: l.outstandingAmount,
+              interestRate: l.interestRate,
+              emiAmount: l.emiAmount,
+              tenureRemaining: l.tenureRemaining,
+            })),
+          );
+        }
+        if (insRes.insurances && insRes.insurances.length > 0) {
+          setInsurances(
+            insRes.insurances.map((i) => ({
+              _id: i._id,
+              type: i.type,
+              provider: i.provider,
+              coverage: i.coverageAmount,
+              premiumAmount: i.premiumAmount,
+              maturityDate: i.maturityDate,
+            })),
+          );
+        }
+        if (glsRes.financialGoals && glsRes.financialGoals.length > 0) {
+          setGoals(
+            glsRes.financialGoals.map((g) => ({
+              _id: g._id,
+              goalType: g.goalType,
+              targetAmount: g.targetAmount,
+              targetDate: g.targetDate,
+              priorityLevel: g.priorityLevel,
+              inflationRate: g.inflationRate,
+              currentSavingsForGoal: g.currentSavingsForGoal,
+            })),
+          );
+        }
+      } catch (err) {
+        console.error("Error loading user financial data:", err);
+      }
+    };
+    loadUserData();
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   const [loadingGen, setLoadingGen] = useState(false);
@@ -121,7 +232,7 @@ function Signup3({ emailId, password }) {
 
   // --- INCOMES STATE --------
   const [incomes, setIncomes] = useState([
-    { sourceType: "salary", amount: "" },
+    { sourceType: "salary", amount: "", growthRate: "0" },
   ]);
   const [loadingInc, setLoadingInc] = useState(false);
   const [savedInc, setSavedInc] = useState(false);
@@ -134,25 +245,40 @@ function Signup3({ emailId, password }) {
   };
 
   const addIncomeRow = () => {
-    setIncomes([...incomes, { sourceType: "investment", amount: "" }]);
+    setIncomes([
+      ...incomes,
+      { sourceType: "investment", amount: "", growthRate: "0" },
+    ]);
   };
 
   const handleSaveIncome = async () => {
     setErrorInc("");
     setLoadingInc(true);
     try {
-      // Create valid incomes only
-      const validIncomes = incomes.filter((inc) => inc.amount);
-      await Promise.all(
-        validIncomes.map((inc) =>
-          addIncome({
-            sourceType: inc.sourceType,
-            monthlyAmount: Number(inc.amount),
-            growthRate: 0,
-          }),
-        ),
+      const validIncomes = incomes.filter(
+        (inc) => inc.amount && !isNaN(Number(inc.amount)),
       );
+      if (validIncomes.length > 0) {
+        await Promise.all(
+          validIncomes.map((inc) => {
+            const data = {
+              sourceType: inc.sourceType,
+              monthlyAmount: Number(inc.amount),
+              growthRate: Number(inc.growthRate) || 0,
+              isActive: true,
+            };
+            if (inc._id) {
+              return updateIncome(inc._id, data);
+            } else {
+              return addIncome(data);
+            }
+          }),
+        );
+      } else {
+        await markOnboardingStep("incomes");
+      }
       setSavedInc(true);
+      // Optional: re-fetch to get new IDs
     } catch (err) {
       setErrorInc("Failed to save Income Details.");
     } finally {
@@ -160,10 +286,24 @@ function Signup3({ emailId, password }) {
     }
   };
 
+  const handleDeleteIncome = async (index) => {
+    const inc = incomes[index];
+    if (inc._id) {
+      try {
+        await deleteIncome(inc._id);
+      } catch (err) {
+        console.error("Failed to delete income", err);
+      }
+    }
+    const newIncomes = [...incomes];
+    newIncomes.splice(index, 1);
+    setIncomes(newIncomes);
+  };
+
   // --- EXPENSES STATE --------
   const [expenses, setExpenses] = useState([
-    { category: "housing", amount: "" },
-    { category: "food", amount: "" },
+    { category: "housing", amount: "", type: "fixed" },
+    { category: "food", amount: "", type: "variable" },
   ]);
   const [loadingExp, setLoadingExp] = useState(false);
   const [savedExp, setSavedExp] = useState(false);
@@ -176,23 +316,37 @@ function Signup3({ emailId, password }) {
   };
 
   const addExpenseRow = () => {
-    setExpenses([...expenses, { category: "other", amount: "" }]);
+    setExpenses([
+      ...expenses,
+      { category: "other", amount: "", type: "variable" },
+    ]);
   };
 
   const handleSaveExpense = async () => {
     setErrorExp("");
     setLoadingExp(true);
     try {
-      const valid = expenses.filter((exp) => exp.amount);
-      await Promise.all(
-        valid.map((exp) =>
-          addExpense({
-            category: exp.category,
-            monthlyAmount: Number(exp.amount),
-            type: "variable",
-          }),
-        ),
+      const valid = expenses.filter(
+        (exp) => exp.amount && !isNaN(Number(exp.amount)),
       );
+      if (valid.length > 0) {
+        await Promise.all(
+          valid.map((exp) => {
+            const data = {
+              category: exp.category,
+              monthlyAmount: Number(exp.amount),
+              type: exp.type,
+            };
+            if (exp._id) {
+              return updateExpense(exp._id, data);
+            } else {
+              return addExpense(data);
+            }
+          }),
+        );
+      } else {
+        await markOnboardingStep("expenses");
+      }
       setSavedExp(true);
     } catch (err) {
       setErrorExp("Failed to save Expenses.");
@@ -201,9 +355,30 @@ function Signup3({ emailId, password }) {
     }
   };
 
+  const handleDeleteExpense = async (index) => {
+    const exp = expenses[index];
+    if (exp._id) {
+      try {
+        await deleteExpense(exp._id);
+      } catch (err) {
+        console.error("Failed to delete expense", err);
+      }
+    }
+    const newExp = [...expenses];
+    newExp.splice(index, 1);
+    setExpenses(newExp);
+  };
+
   // --- ASSETS STATE --------
   const [assets, setAssets] = useState([
-    { type: "Brokerage", name: "", amount: "" },
+    {
+      type: "stock",
+      name: "",
+      amount: "",
+      investedAmount: "",
+      expectedReturnRate: "12",
+      liquidityLevel: "high",
+    },
   ]);
   const [loadingAsset, setLoadingAsset] = useState(false);
   const [savedAsset, setSavedAsset] = useState(false);
@@ -216,7 +391,17 @@ function Signup3({ emailId, password }) {
   };
 
   const addAssetRow = () => {
-    setAssets([...assets, { type: "Real Estate", name: "", amount: "" }]);
+    setAssets([
+      ...assets,
+      {
+        type: "mutual_fund",
+        name: "",
+        amount: "",
+        investedAmount: "",
+        expectedReturnRate: "10",
+        liquidityLevel: "medium",
+      },
+    ]);
   };
 
   const handleSaveAssets = async () => {
@@ -224,7 +409,27 @@ function Signup3({ emailId, password }) {
     setLoadingAsset(true);
     try {
       const valid = assets.filter((a) => a.amount && a.name);
-      await Promise.all(valid.map((a) => addAsset(a)));
+      if (valid.length > 0) {
+        await Promise.all(
+          valid.map((a) => {
+            const data = {
+              type: a.type,
+              name: a.name,
+              currentValue: Number(a.amount),
+              investedAmount: Number(a.investedAmount) || Number(a.amount),
+              expectedReturnRate: Number(a.expectedReturnRate) || 0,
+              liquidityLevel: a.liquidityLevel,
+            };
+            if (a._id) {
+              return updateAsset(a._id, data);
+            } else {
+              return addAsset(data);
+            }
+          }),
+        );
+      } else {
+        await markOnboardingStep("assets");
+      }
       setSavedAsset(true);
     } catch (err) {
       setErrorAsset("Failed to save Assets.");
@@ -233,9 +438,30 @@ function Signup3({ emailId, password }) {
     }
   };
 
+  const handleDeleteAsset = async (index) => {
+    const a = assets[index];
+    if (a._id) {
+      try {
+        await deleteAsset(a._id);
+      } catch (err) {
+        console.error("Failed to delete asset", err);
+      }
+    }
+    const newAssets = [...assets];
+    newAssets.splice(index, 1);
+    setAssets(newAssets);
+  };
+
   // --- LIABILITIES STATE --------
   const [liabilities, setLiabilities] = useState([
-    { type: "Student Loans", amount: "" },
+    {
+      type: "loan",
+      principalAmount: "",
+      outstandingAmount: "",
+      interestRate: "",
+      emiAmount: "",
+      tenureRemaining: "",
+    },
   ]);
   const [loadingLiab, setLoadingLiab] = useState(false);
   const [savedLiab, setSavedLiab] = useState(false);
@@ -248,15 +474,45 @@ function Signup3({ emailId, password }) {
   };
 
   const addLiabilityRow = () => {
-    setLiabilities([...liabilities, { type: "Credit Card", amount: "" }]);
+    setLiabilities([
+      ...liabilities,
+      {
+        type: "credit_card",
+        principalAmount: "",
+        outstandingAmount: "",
+        interestRate: "",
+        emiAmount: "",
+        tenureRemaining: "",
+      },
+    ]);
   };
 
   const handleSaveLiabilities = async () => {
     setErrorLiab("");
     setLoadingLiab(true);
     try {
-      const valid = liabilities.filter((l) => l.amount);
-      await Promise.all(valid.map((l) => addLiability(l)));
+      const valid = liabilities.filter((l) => l.outstandingAmount);
+      if (valid.length > 0) {
+        await Promise.all(
+          valid.map((l) => {
+            const data = {
+              type: l.type,
+              principalAmount: Number(l.principalAmount) || 0,
+              outstandingAmount: Number(l.outstandingAmount) || 0,
+              interestRate: Number(l.interestRate) || 0,
+              emiAmount: Number(l.emiAmount) || 0,
+              tenureRemaining: Number(l.tenureRemaining) || 0,
+            };
+            if (l._id) {
+              return updateLiability(l._id, data);
+            } else {
+              return addLiability(data);
+            }
+          }),
+        );
+      } else {
+        await markOnboardingStep("liabilities");
+      }
       setSavedLiab(true);
     } catch (err) {
       setErrorLiab("Failed to save Liabilities.");
@@ -265,9 +521,29 @@ function Signup3({ emailId, password }) {
     }
   };
 
+  const handleDeleteLiability = async (index) => {
+    const l = liabilities[index];
+    if (l._id) {
+      try {
+        await deleteLiability(l._id);
+      } catch (err) {
+        console.error("Failed to delete liability", err);
+      }
+    }
+    const newLiab = [...liabilities];
+    newLiab.splice(index, 1);
+    setLiabilities(newLiab);
+  };
+
   // --- INSURANCE STATE --------
   const [insurances, setInsurances] = useState([
-    { type: "Health", provider: "", coverage: "" },
+    {
+      type: "health",
+      provider: "",
+      coverage: "",
+      premiumAmount: "",
+      maturityDate: "",
+    },
   ]);
   const [loadingIns, setLoadingIns] = useState(false);
   const [savedIns, setSavedIns] = useState(false);
@@ -282,7 +558,13 @@ function Signup3({ emailId, password }) {
   const addInsuranceRow = () => {
     setInsurances([
       ...insurances,
-      { type: "Life", provider: "", coverage: "" },
+      {
+        type: "term",
+        provider: "",
+        coverage: "",
+        premiumAmount: "",
+        maturityDate: "",
+      },
     ]);
   };
 
@@ -291,7 +573,30 @@ function Signup3({ emailId, password }) {
     setLoadingIns(true);
     try {
       const valid = insurances.filter((i) => i.provider);
-      await Promise.all(valid.map((i) => addInsurance(i)));
+      if (valid.length > 0) {
+        await Promise.all(
+          valid.map((i) => {
+            const data = {
+              type: i.type,
+              provider: i.provider,
+              coverageAmount: Number(i.coverage) || 0,
+              premiumAmount: Number(i.premiumAmount) || 0,
+              maturityDate:
+                i.maturityDate ||
+                new Date(
+                  Date.now() + 10 * 365 * 24 * 60 * 60 * 1000,
+                ).toISOString(),
+            };
+            if (i._id) {
+              return updateInsurance(i._id, data);
+            } else {
+              return addInsurance(data);
+            }
+          }),
+        );
+      } else {
+        await markOnboardingStep("insurance");
+      }
       setSavedIns(true);
     } catch (err) {
       setErrorIns("Failed to save Insurance.");
@@ -300,9 +605,30 @@ function Signup3({ emailId, password }) {
     }
   };
 
+  const handleDeleteInsurance = async (index) => {
+    const i = insurances[index];
+    if (i._id) {
+      try {
+        await deleteInsurance(i._id);
+      } catch (err) {
+        console.error("Failed to delete insurance", err);
+      }
+    }
+    const newIns = [...insurances];
+    newIns.splice(index, 1);
+    setInsurances(newIns);
+  };
+
   // --- GOALS STATE --------
   const [goals, setGoals] = useState([
-    { name: "Retirement", targetAmount: "", targetYear: "" },
+    {
+      goalType: "retirement",
+      targetAmount: "",
+      targetDate: "",
+      priorityLevel: "high",
+      inflationRate: "6",
+      currentSavingsForGoal: "0",
+    },
   ]);
   const [loadingGoal, setLoadingGoal] = useState(false);
   const [savedGoal, setSavedGoal] = useState(false);
@@ -317,7 +643,14 @@ function Signup3({ emailId, password }) {
   const addGoalRow = () => {
     setGoals([
       ...goals,
-      { name: "Home Purchase", targetAmount: "", targetYear: "" },
+      {
+        goalType: "house",
+        targetAmount: "",
+        targetDate: "",
+        priorityLevel: "medium",
+        inflationRate: "6",
+        currentSavingsForGoal: "0",
+      },
     ]);
   };
 
@@ -325,8 +658,33 @@ function Signup3({ emailId, password }) {
     setErrorGoal("");
     setLoadingGoal(true);
     try {
-      const valid = goals.filter((g) => g.name && g.targetAmount);
-      await Promise.all(valid.map((g) => addFinancialGoal(g)));
+      const valid = goals.filter((g) => g.goalType && g.targetAmount);
+      if (valid.length > 0) {
+        await Promise.all(
+          valid.map((g) => {
+            const data = {
+              goalType: g.goalType,
+              targetAmount: Number(g.targetAmount),
+              targetDate:
+                g.targetDate ||
+                new Date(
+                  Date.now() + 5 * 365 * 24 * 60 * 60 * 1000,
+                ).toISOString(),
+              priorityLevel: g.priorityLevel,
+              inflationRate: Number(g.inflationRate) || 0,
+              currentSavingsForGoal: Number(g.currentSavingsForGoal) || 0,
+              status: "active",
+            };
+            if (g._id) {
+              return updateFinancialGoal(g._id, data);
+            } else {
+              return addFinancialGoal(data);
+            }
+          }),
+        );
+      } else {
+        await markOnboardingStep("goals");
+      }
       setSavedGoal(true);
     } catch (err) {
       setErrorGoal("Failed to save Goals.");
@@ -335,15 +693,30 @@ function Signup3({ emailId, password }) {
     }
   };
 
+  const handleDeleteGoal = async (index) => {
+    const g = goals[index];
+    if (g._id) {
+      try {
+        await deleteFinancialGoal(g._id);
+      } catch (err) {
+        console.error("Failed to delete goal", err);
+      }
+    }
+    const newGoals = [...goals];
+    newGoals.splice(index, 1);
+    setGoals(newGoals);
+  };
+
   const [isDbAllSaved, setIsDbAllSaved] = useState(false);
 
   useEffect(() => {
-    if (!emailId || isDbAllSaved) return;
+    const targetEmail = emailId || user?.email;
+    if (!targetEmail || isDbAllSaved) return;
 
     let isMounted = true;
     const interval = setInterval(async () => {
       try {
-        const res = await checkOnboardingStatus(emailId);
+        const res = await checkOnboardingStatus(targetEmail);
         if (res.allSaved && isMounted) {
           setIsDbAllSaved(true);
         }
@@ -356,7 +729,7 @@ function Signup3({ emailId, password }) {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [emailId, isDbAllSaved]);
+  }, [emailId, user?.email, isDbAllSaved]);
 
   const allSaved = isDbAllSaved;
   return (
@@ -771,22 +1144,22 @@ function Signup3({ emailId, password }) {
                     <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
                       <button
                         type="button"
-                        onClick={() => setRiskProfile("Conservative")}
-                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "Conservative" ? "font-bold bg-white shadow-sm border border-slate-100 text-blue-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
+                        onClick={() => setRiskProfile("conservative")}
+                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "conservative" ? "font-bold bg-white shadow-sm border border-slate-100 text-blue-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
                       >
                         Conservative
                       </button>
                       <button
                         type="button"
-                        onClick={() => setRiskProfile("Moderate")}
-                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "Moderate" ? "font-bold bg-white shadow-sm border border-slate-100 text-blue-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
+                        onClick={() => setRiskProfile("moderate")}
+                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "moderate" ? "font-bold bg-white shadow-sm border border-slate-100 text-blue-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
                       >
                         Moderate
                       </button>
                       <button
                         type="button"
-                        onClick={() => setRiskProfile("Aggressive")}
-                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "Aggressive" ? "font-bold bg-white shadow-sm border border-slate-100 text-blue-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
+                        onClick={() => setRiskProfile("aggressive")}
+                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "aggressive" ? "font-bold bg-white shadow-sm border border-slate-100 text-blue-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
                       >
                         Aggressive
                       </button>
@@ -805,6 +1178,13 @@ function Signup3({ emailId, password }) {
                 loading={loadingInc}
                 error={errorInc}
                 onSave={handleSaveIncome}
+                saveBtnText={
+                  incomes.filter(
+                    (inc) => inc.amount && !isNaN(Number(inc.amount)),
+                  ).length > 0
+                    ? "Save Income Details"
+                    : "I don't have an Income"
+                }
               >
                 <div className="space-y-4">
                   {incomes.map((inc, index) => (
@@ -846,16 +1226,44 @@ function Signup3({ emailId, password }) {
                               e.target.value,
                             )
                           }
-                          placeholder="Amount per year/month"
+                          placeholder="Amount"
                           className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-8 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
                         />
                       </div>
+                      <div className="relative w-1/4">
+                        <span className="absolute right-4 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
+                          %
+                        </span>
+                        <input
+                          type="number"
+                          value={inc.growthRate}
+                          onChange={(e) =>
+                            handleAppIncomeChange(
+                              index,
+                              "growthRate",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="Growth"
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-4 pr-8 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteIncome(index)}
+                        className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center"
+                        title="Delete Income"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">
+                          delete
+                        </span>
+                      </button>
                     </div>
                   ))}
                   <button
                     type="button"
                     onClick={addIncomeRow}
-                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1"
+                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1 mt-4"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       add
@@ -877,6 +1285,13 @@ function Signup3({ emailId, password }) {
                 loading={loadingExp}
                 error={errorExp}
                 onSave={handleSaveExpense}
+                saveBtnText={
+                  expenses.filter(
+                    (exp) => exp.amount && !isNaN(Number(exp.amount)),
+                  ).length > 0
+                    ? "Save Monthly Expenses"
+                    : "I don't have Expenses"
+                }
               >
                 <div className="space-y-4">
                   {expenses.map((exp, index) => (
@@ -923,12 +1338,37 @@ function Signup3({ emailId, password }) {
                           className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-8 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
                         />
                       </div>
+                      <div className="relative w-1/4">
+                        <select
+                          value={exp.type}
+                          onChange={(e) =>
+                            handleExpenseChange(index, "type", e.target.value)
+                          }
+                          className="appearance-none w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-4 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium cursor-pointer"
+                        >
+                          <option value="fixed">Fixed</option>
+                          <option value="variable">Variable</option>
+                        </select>
+                        <span className="material-symbols-outlined absolute right-3 top-[10px] text-slate-400 pointer-events-none">
+                          expand_more
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteExpense(index)}
+                        className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center"
+                        title="Delete Expense"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">
+                          delete
+                        </span>
+                      </button>
                     </div>
                   ))}
                   <button
                     type="button"
                     onClick={addExpenseRow}
-                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1"
+                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1 mt-4"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       add
@@ -948,59 +1388,138 @@ function Signup3({ emailId, password }) {
                 loading={loadingAsset}
                 error={errorAsset}
                 onSave={handleSaveAssets}
+                saveBtnText={
+                  assets.filter((a) => a.amount && a.name).length > 0
+                    ? "Save Assets & Investments"
+                    : "I don't have Assets"
+                }
               >
                 <div className="space-y-4">
                   {assets.map((asset, index) => (
-                    <div key={index} className="flex gap-2 items-center">
-                      <div className="relative w-1/3">
-                        <select
-                          value={asset.type}
-                          onChange={(e) =>
-                            handleAssetChange(index, "type", e.target.value)
-                          }
-                          className="appearance-none w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium cursor-pointer"
+                    <div
+                      key={index}
+                      className="flex flex-col gap-3 p-3 bg-white border border-slate-100 rounded-xl shadow-sm"
+                    >
+                      <div className="flex gap-2 items-center">
+                        <div className="relative w-1/3">
+                          <select
+                            value={asset.type}
+                            onChange={(e) =>
+                              handleAssetChange(index, "type", e.target.value)
+                            }
+                            className="appearance-none w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium cursor-pointer"
+                          >
+                            <option value="stock">Stock</option>
+                            <option value="mutual_fund">Mutual Fund</option>
+                            <option value="crypto">Crypto</option>
+                            <option value="fd">Fixed Deposit (FD)</option>
+                            <option value="real_estate">Real Estate</option>
+                            <option value="gold">Gold</option>
+                          </select>
+                          <span className="material-symbols-outlined absolute right-3 top-[10px] text-slate-400 pointer-events-none text-lg">
+                            expand_more
+                          </span>
+                        </div>
+                        <div className="relative flex-1">
+                          <input
+                            type="text"
+                            value={asset.name}
+                            onChange={(e) =>
+                              handleAssetChange(index, "name", e.target.value)
+                            }
+                            placeholder="Account/Asset Name"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            value={asset.amount}
+                            onChange={(e) =>
+                              handleAssetChange(index, "amount", e.target.value)
+                            }
+                            placeholder="Current Value"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            value={asset.investedAmount}
+                            onChange={(e) =>
+                              handleAssetChange(
+                                index,
+                                "investedAmount",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Invested Amount"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                        <div className="relative w-1/4">
+                          <span className="absolute right-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
+                            %
+                          </span>
+                          <input
+                            type="number"
+                            value={asset.expectedReturnRate}
+                            onChange={(e) =>
+                              handleAssetChange(
+                                index,
+                                "expectedReturnRate",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Return %"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-3 pr-7 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                        <div className="relative w-1/3">
+                          <select
+                            value={asset.liquidityLevel}
+                            onChange={(e) =>
+                              handleAssetChange(
+                                index,
+                                "liquidityLevel",
+                                e.target.value,
+                              )
+                            }
+                            className="appearance-none w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium cursor-pointer"
+                          >
+                            <option value="high">High Liquidity</option>
+                            <option value="medium">Medium Liquidity</option>
+                            <option value="low">Low Liquidity</option>
+                          </select>
+                          <span className="material-symbols-outlined absolute right-3 top-[10px] text-slate-400 pointer-events-none text-lg">
+                            expand_more
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAsset(index)}
+                          className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center ml-2"
+                          title="Delete Asset"
                         >
-                          <option value="Brokerage">Brokerage</option>
-                          <option value="Real Estate">Real Estate</option>
-                          <option value="Crypto">Crypto</option>
-                          <option value="Cash">Cash</option>
-                          <option value="Other">Other</option>
-                        </select>
-                        <span className="material-symbols-outlined absolute right-3 top-[10px] text-slate-400 pointer-events-none text-lg">
-                          expand_more
-                        </span>
-                      </div>
-                      <div className="relative flex-1">
-                        <input
-                          type="text"
-                          value={asset.name}
-                          onChange={(e) =>
-                            handleAssetChange(index, "name", e.target.value)
-                          }
-                          placeholder="Account/Asset Name"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
-                        />
-                      </div>
-                      <div className="relative w-1/3">
-                        <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
-                          ₹
-                        </span>
-                        <input
-                          type="number"
-                          value={asset.amount}
-                          onChange={(e) =>
-                            handleAssetChange(index, "amount", e.target.value)
-                          }
-                          placeholder="Value"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
-                        />
+                          <span className="material-symbols-outlined text-[20px]">
+                            delete
+                          </span>
+                        </button>
                       </div>
                     </div>
                   ))}
                   <button
                     type="button"
                     onClick={addAssetRow}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all font-semibold text-sm"
+                    className="w-full flex items-center justify-center gap-2 py-3 mt-4 rounded-xl border-2 border-dashed border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all font-semibold text-sm"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       add_circle
@@ -1022,44 +1541,139 @@ function Signup3({ emailId, password }) {
                 loading={loadingLiab}
                 error={errorLiab}
                 onSave={handleSaveLiabilities}
+                saveBtnText={
+                  liabilities.filter((l) => l.outstandingAmount).length > 0
+                    ? "Save Liabilities"
+                    : "I don't have Liabilities"
+                }
               >
                 <div className="space-y-4">
                   {liabilities.map((liab, index) => (
-                    <div key={index} className="flex gap-2">
-                      <div className="relative w-1/2">
-                        <select
-                          value={liab.type}
-                          onChange={(e) =>
-                            handleLiabilityChange(index, "type", e.target.value)
-                          }
-                          className="appearance-none w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium cursor-pointer"
-                        >
-                          <option value="Student Loans">Student Loans</option>
-                          <option value="Credit Card">Credit Card</option>
-                          <option value="Mortgage">Mortgage</option>
-                          <option value="Personal Loan">Personal Loan</option>
-                        </select>
-                        <span className="material-symbols-outlined absolute right-3 top-[10px] text-slate-400 pointer-events-none text-lg">
-                          expand_more
-                        </span>
+                    <div
+                      key={index}
+                      className="flex flex-col gap-3 p-3 bg-white border border-slate-100 rounded-xl shadow-sm"
+                    >
+                      <div className="flex gap-2">
+                        <div className="relative w-1/3">
+                          <select
+                            value={liab.type}
+                            onChange={(e) =>
+                              handleLiabilityChange(
+                                index,
+                                "type",
+                                e.target.value,
+                              )
+                            }
+                            className="appearance-none w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium cursor-pointer"
+                          >
+                            <option value="loan">Loan</option>
+                            <option value="credit_card">Credit Card</option>
+                            <option value="mortgage">Mortgage</option>
+                            <option value="other">Other</option>
+                          </select>
+                          <span className="material-symbols-outlined absolute right-3 top-[10px] text-slate-400 pointer-events-none text-lg">
+                            expand_more
+                          </span>
+                        </div>
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            value={liab.principalAmount}
+                            onChange={(e) =>
+                              handleLiabilityChange(
+                                index,
+                                "principalAmount",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Principal Amount"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            value={liab.outstandingAmount}
+                            onChange={(e) =>
+                              handleLiabilityChange(
+                                index,
+                                "outstandingAmount",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Outstanding Balance"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
                       </div>
-                      <div className="relative w-1/2">
-                        <span className="absolute left-4 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
-                          ₹
-                        </span>
-                        <input
-                          type="number"
-                          value={liab.amount}
-                          onChange={(e) =>
-                            handleLiabilityChange(
-                              index,
-                              "amount",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="Total Dept"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-8 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
-                        />
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            value={liab.emiAmount}
+                            onChange={(e) =>
+                              handleLiabilityChange(
+                                index,
+                                "emiAmount",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Monthly EMI"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                        <div className="relative w-1/4">
+                          <span className="absolute right-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
+                            %
+                          </span>
+                          <input
+                            type="number"
+                            value={liab.interestRate}
+                            onChange={(e) =>
+                              handleLiabilityChange(
+                                index,
+                                "interestRate",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Iterest %"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-3 pr-7 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                        <div className="relative w-1/3">
+                          <input
+                            type="number"
+                            value={liab.tenureRemaining}
+                            onChange={(e) =>
+                              handleLiabilityChange(
+                                index,
+                                "tenureRemaining",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Months Left"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLiability(index)}
+                          className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center ml-2"
+                          title="Delete Liability"
+                        >
+                          <span className="material-symbols-outlined text-[20px]">
+                            delete
+                          </span>
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -1088,56 +1702,126 @@ function Signup3({ emailId, password }) {
                 loading={loadingIns}
                 error={errorIns}
                 onSave={handleSaveInsurance}
+                saveBtnText={
+                  insurances.filter((i) => i.provider).length > 0
+                    ? "Save Insurance Policies"
+                    : "I don't have Insurance"
+                }
               >
                 <div className="space-y-4">
                   {insurances.map((ins, index) => (
-                    <div key={index} className="flex gap-2 items-center">
-                      <div className="relative w-1/3">
-                        <select
-                          value={ins.type}
-                          onChange={(e) =>
-                            handleInsuranceChange(index, "type", e.target.value)
-                          }
-                          className="appearance-none w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium cursor-pointer"
+                    <div
+                      key={index}
+                      className="flex flex-col gap-3 p-3 bg-white border border-slate-100 rounded-xl shadow-sm"
+                    >
+                      <div className="flex gap-2 items-center">
+                        <div className="relative w-1/3">
+                          <select
+                            value={ins.type}
+                            onChange={(e) =>
+                              handleInsuranceChange(
+                                index,
+                                "type",
+                                e.target.value,
+                              )
+                            }
+                            className="appearance-none w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium cursor-pointer"
+                          >
+                            <option value="health">Health</option>
+                            <option value="term">Term Life</option>
+                            <option value="life">Whole Life</option>
+                            <option value="vehicle">Vehicle</option>
+                            <option value="property">Property</option>
+                            <option value="other">Other</option>
+                          </select>
+                          <span className="material-symbols-outlined absolute right-3 top-[10px] text-slate-400 pointer-events-none text-lg">
+                            expand_more
+                          </span>
+                        </div>
+                        <div className="relative flex-1">
+                          <input
+                            type="text"
+                            value={ins.provider}
+                            onChange={(e) =>
+                              handleInsuranceChange(
+                                index,
+                                "provider",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Provider Name"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            value={ins.coverage}
+                            onChange={(e) =>
+                              handleInsuranceChange(
+                                index,
+                                "coverage",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Coverage Amount"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            value={ins.premiumAmount}
+                            onChange={(e) =>
+                              handleInsuranceChange(
+                                index,
+                                "premiumAmount",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Annual Premium"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                        <div className="relative w-1/3">
+                          <input
+                            type="date"
+                            value={
+                              ins.maturityDate
+                                ? ins.maturityDate.split("T")[0]
+                                : ""
+                            }
+                            onChange={(e) => {
+                              const dateVal = e.target.value
+                                ? new Date(e.target.value).toISOString()
+                                : "";
+                              handleInsuranceChange(
+                                index,
+                                "maturityDate",
+                                dateVal,
+                              );
+                            }}
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-500 text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteInsurance(index)}
+                          className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center ml-2"
+                          title="Delete Insurance"
                         >
-                          <option value="Health">Health</option>
-                          <option value="Life">Life</option>
-                          <option value="Home">Home</option>
-                          <option value="Auto">Auto</option>
-                        </select>
-                        <span className="material-symbols-outlined absolute right-3 top-[10px] text-slate-400 pointer-events-none text-lg">
-                          expand_more
-                        </span>
-                      </div>
-                      <div className="relative flex-1">
-                        <input
-                          type="text"
-                          value={ins.provider}
-                          onChange={(e) =>
-                            handleInsuranceChange(
-                              index,
-                              "provider",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="Provider Name"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
-                        />
-                      </div>
-                      <div className="relative w-1/4">
-                        <input
-                          type="number"
-                          value={ins.coverage}
-                          onChange={(e) =>
-                            handleInsuranceChange(
-                              index,
-                              "coverage",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="Coverage"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
-                        />
+                          <span className="material-symbols-outlined text-[20px]">
+                            delete
+                          </span>
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -1166,53 +1850,148 @@ function Signup3({ emailId, password }) {
                 loading={loadingGoal}
                 error={errorGoal}
                 onSave={handleSaveGoals}
+                saveBtnText={
+                  goals.filter((g) => g.goalType && g.targetAmount).length > 0
+                    ? "Save Financial Goals"
+                    : "I don't have Goals"
+                }
               >
                 <div className="space-y-4">
                   {goals.map((goal, index) => (
-                    <div key={index} className="flex gap-2 items-center">
-                      <div className="relative flex-1">
-                        <input
-                          type="text"
-                          value={goal.name}
-                          onChange={(e) =>
-                            handleGoalChange(index, "name", e.target.value)
-                          }
-                          placeholder="Goal Name (e.g., House Downpayment)"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
-                        />
+                    <div
+                      key={index}
+                      className="flex flex-col gap-3 p-3 bg-white border border-slate-100 rounded-xl shadow-sm"
+                    >
+                      <div className="flex gap-2 items-center">
+                        <div className="relative flex-1">
+                          <select
+                            value={goal.goalType}
+                            onChange={(e) =>
+                              handleGoalChange(
+                                index,
+                                "goalType",
+                                e.target.value,
+                              )
+                            }
+                            className="appearance-none w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium cursor-pointer"
+                          >
+                            <option value="retirement">Retirement</option>
+                            <option value="house">House Downpayment</option>
+                            <option value="car">Car Purchase</option>
+                            <option value="education">Education</option>
+                            <option value="travel">Travel</option>
+                            <option value="emergency_fund">
+                              Emergency Fund
+                            </option>
+                            <option value="other">Other</option>
+                          </select>
+                          <span className="material-symbols-outlined absolute right-3 top-[10px] text-slate-400 pointer-events-none text-lg">
+                            expand_more
+                          </span>
+                        </div>
+                        <div className="relative w-1/3">
+                          <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            value={goal.targetAmount}
+                            onChange={(e) =>
+                              handleGoalChange(
+                                index,
+                                "targetAmount",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Target Amount"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                        <div className="relative w-1/4">
+                          <input
+                            type="date"
+                            value={
+                              goal.targetDate
+                                ? goal.targetDate.split("T")[0]
+                                : ""
+                            }
+                            onChange={(e) => {
+                              const dateVal = e.target.value
+                                ? new Date(e.target.value).toISOString()
+                                : "";
+                              handleGoalChange(index, "targetDate", dateVal);
+                            }}
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-500 text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium"
+                          />
+                        </div>
                       </div>
-                      <div className="relative w-1/3">
-                        <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
-                          ₹
-                        </span>
-                        <input
-                          type="number"
-                          value={goal.targetAmount}
-                          onChange={(e) =>
-                            handleGoalChange(
-                              index,
-                              "targetAmount",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="Target"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
-                        />
-                      </div>
-                      <div className="relative w-1/4">
-                        <input
-                          type="number"
-                          value={goal.targetYear}
-                          onChange={(e) =>
-                            handleGoalChange(
-                              index,
-                              "targetYear",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="Year"
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
-                        />
+                      <div className="flex gap-2 items-center">
+                        <div className="relative flex-1">
+                          <select
+                            value={goal.priorityLevel}
+                            onChange={(e) =>
+                              handleGoalChange(
+                                index,
+                                "priorityLevel",
+                                e.target.value,
+                              )
+                            }
+                            className="appearance-none w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium cursor-pointer"
+                          >
+                            <option value="high">High Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="low">Low Priority</option>
+                          </select>
+                          <span className="material-symbols-outlined absolute right-3 top-[10px] text-slate-400 pointer-events-none text-lg">
+                            expand_more
+                          </span>
+                        </div>
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            value={goal.currentSavingsForGoal}
+                            onChange={(e) =>
+                              handleGoalChange(
+                                index,
+                                "currentSavingsForGoal",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Saved So Far"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                        <div className="relative w-1/4">
+                          <span className="absolute right-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
+                            %
+                          </span>
+                          <input
+                            type="number"
+                            value={goal.inflationRate}
+                            onChange={(e) =>
+                              handleGoalChange(
+                                index,
+                                "inflationRate",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Req Return"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-3 pr-7 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteGoal(index)}
+                          className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center ml-2"
+                          title="Delete Goal"
+                        >
+                          <span className="material-symbols-outlined text-[20px]">
+                            delete
+                          </span>
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -1228,6 +2007,28 @@ function Signup3({ emailId, password }) {
                   </button>
                 </div>
               </SectionCard>
+            </div>
+
+            {/* Bottom Form Actions */}
+            <div className="pt-6 border-t border-slate-200 mt-8 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  if (user) completeOnboarding();
+                  navigate("/dashboard");
+                }}
+                disabled={!allSaved}
+                className={`font-bold py-3 px-8 text-lg rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 whitespace-nowrap ${
+                  allSaved
+                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/30 ring-4 ring-blue-600/10"
+                    : "bg-slate-200 text-slate-400 shadow-none cursor-not-allowed"
+                }`}
+              >
+                Get Results
+                <span className="material-symbols-outlined text-[20px] font-bold">
+                  arrow_forward
+                </span>
+              </button>
             </div>
           </div>
         </main>
