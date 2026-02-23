@@ -191,10 +191,12 @@ function Signup3({ emailId, password }) {
   const handleGenInfoChange = (e) => {
     const { name, value } = e.target;
     setGeneralInfo((prev) => ({ ...prev, [name]: value }));
+    setSavedGen(false);
   };
 
   const setRiskProfile = (profile) => {
     setGeneralInfo((prev) => ({ ...prev, riskProfile: profile }));
+    setSavedGen(false);
   };
 
   const handleSaveGeneralInfo = async () => {
@@ -242,6 +244,7 @@ function Signup3({ emailId, password }) {
     const newIncomes = [...incomes];
     newIncomes[index][field] = value;
     setIncomes(newIncomes);
+    setSavedInc(false);
   };
 
   const addIncomeRow = () => {
@@ -249,6 +252,7 @@ function Signup3({ emailId, password }) {
       ...incomes,
       { sourceType: "investment", amount: "", growthRate: "0" },
     ]);
+    setSavedInc(false);
   };
 
   const handleSaveIncome = async () => {
@@ -298,6 +302,7 @@ function Signup3({ emailId, password }) {
     const newIncomes = [...incomes];
     newIncomes.splice(index, 1);
     setIncomes(newIncomes);
+    setSavedInc(false);
   };
 
   // --- EXPENSES STATE --------
@@ -313,6 +318,7 @@ function Signup3({ emailId, password }) {
     const newExp = [...expenses];
     newExp[index][field] = value;
     setExpenses(newExp);
+    setSavedExp(false);
   };
 
   const addExpenseRow = () => {
@@ -320,6 +326,7 @@ function Signup3({ emailId, password }) {
       ...expenses,
       { category: "other", amount: "", type: "variable" },
     ]);
+    setSavedExp(false);
   };
 
   const handleSaveExpense = async () => {
@@ -367,6 +374,7 @@ function Signup3({ emailId, password }) {
     const newExp = [...expenses];
     newExp.splice(index, 1);
     setExpenses(newExp);
+    setSavedExp(false);
   };
 
   // --- ASSETS STATE --------
@@ -388,6 +396,7 @@ function Signup3({ emailId, password }) {
     const newAssets = [...assets];
     newAssets[index][field] = value;
     setAssets(newAssets);
+    setSavedAsset(false);
   };
 
   const addAssetRow = () => {
@@ -402,6 +411,7 @@ function Signup3({ emailId, password }) {
         liquidityLevel: "medium",
       },
     ]);
+    setSavedAsset(false);
   };
 
   const handleSaveAssets = async () => {
@@ -450,6 +460,7 @@ function Signup3({ emailId, password }) {
     const newAssets = [...assets];
     newAssets.splice(index, 1);
     setAssets(newAssets);
+    setSavedAsset(false);
   };
 
   // --- LIABILITIES STATE --------
@@ -471,6 +482,7 @@ function Signup3({ emailId, password }) {
     const newLiab = [...liabilities];
     newLiab[index][field] = value;
     setLiabilities(newLiab);
+    setSavedLiab(false);
   };
 
   const addLiabilityRow = () => {
@@ -485,6 +497,7 @@ function Signup3({ emailId, password }) {
         tenureRemaining: "",
       },
     ]);
+    setSavedLiab(false);
   };
 
   const handleSaveLiabilities = async () => {
@@ -533,6 +546,7 @@ function Signup3({ emailId, password }) {
     const newLiab = [...liabilities];
     newLiab.splice(index, 1);
     setLiabilities(newLiab);
+    setSavedLiab(false);
   };
 
   // --- INSURANCE STATE --------
@@ -553,6 +567,7 @@ function Signup3({ emailId, password }) {
     const newIns = [...insurances];
     newIns[index][field] = value;
     setInsurances(newIns);
+    setSavedIns(false);
   };
 
   const addInsuranceRow = () => {
@@ -566,6 +581,7 @@ function Signup3({ emailId, password }) {
         maturityDate: "",
       },
     ]);
+    setSavedIns(false);
   };
 
   const handleSaveInsurance = async () => {
@@ -617,6 +633,7 @@ function Signup3({ emailId, password }) {
     const newIns = [...insurances];
     newIns.splice(index, 1);
     setInsurances(newIns);
+    setSavedIns(false);
   };
 
   // --- GOALS STATE --------
@@ -638,6 +655,7 @@ function Signup3({ emailId, password }) {
     const newGoals = [...goals];
     newGoals[index][field] = value;
     setGoals(newGoals);
+    setSavedGoal(false);
   };
 
   const addGoalRow = () => {
@@ -652,6 +670,7 @@ function Signup3({ emailId, password }) {
         currentSavingsForGoal: "0",
       },
     ]);
+    setSavedGoal(false);
   };
 
   const handleSaveGoals = async () => {
@@ -705,6 +724,7 @@ function Signup3({ emailId, password }) {
     const newGoals = [...goals];
     newGoals.splice(index, 1);
     setGoals(newGoals);
+    setSavedGoal(false);
   };
 
   const [isDbAllSaved, setIsDbAllSaved] = useState(false);
@@ -1432,8 +1452,8 @@ function Signup3({ emailId, password }) {
                           />
                         </div>
                       </div>
-                      <div className="flex gap-2 items-center">
-                        <div className="relative flex-1">
+                      <div className="flex gap-2 items-center flex-wrap sm:flex-nowrap">
+                        <div className="relative flex-1 min-w-[110px]">
                           <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
                             ₹
                           </span>
@@ -1443,11 +1463,11 @@ function Signup3({ emailId, password }) {
                             onChange={(e) =>
                               handleAssetChange(index, "amount", e.target.value)
                             }
-                            placeholder="Current Value"
-                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                            placeholder="Value"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
                           />
                         </div>
-                        <div className="relative flex-1">
+                        <div className="relative flex-1 min-w-[110px]">
                           <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
                             ₹
                           </span>
@@ -1461,11 +1481,11 @@ function Signup3({ emailId, password }) {
                                 e.target.value,
                               )
                             }
-                            placeholder="Invested Amount"
-                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                            placeholder="Invested"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
                           />
                         </div>
-                        <div className="relative w-1/4">
+                        <div className="relative w-full sm:w-1/4 min-w-[80px]">
                           <span className="absolute right-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
                             %
                           </span>
@@ -1479,8 +1499,8 @@ function Signup3({ emailId, password }) {
                                 e.target.value,
                               )
                             }
-                            placeholder="Return %"
-                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-3 pr-7 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                            placeholder="Ret %"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm rounded-lg pl-3 pr-7 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
                           />
                         </div>
                         <div className="relative w-1/3">

@@ -62,6 +62,127 @@ function SectionError({ message, onRetry }) {
   );
 }
 
+/* ── Animations ────────────────────────────────────────────────────────── */
+function AnimatedNumber({
+  value,
+  formatFn = (n) => Math.round(n),
+  duration = 1500,
+}) {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (value === null || value === undefined) return;
+    const endValue = Number(value) || 0;
+    const startValue = endValue > 0 ? 1 : 0;
+
+    let startTimestamp = null;
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      setCurrent(startValue + easeOut * (endValue - startValue));
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else {
+        setCurrent(endValue);
+      }
+    };
+    window.requestAnimationFrame(step);
+  }, [value, duration]);
+
+  return <>{formatFn(current)}</>;
+}
+
+function AnimatedProgressBar({ value, max }) {
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    const target = Math.min((value / max) * 100, 100) || 0;
+    const timeout = setTimeout(() => {
+      setWidth(target);
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [value, max]);
+
+  return (
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+      <div
+        className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out"
+        style={{ width: `${width}%` }}
+      ></div>
+    </div>
+  );
+}
+
+function AnimatedSemicircle({ score }) {
+  const [animatedScore, setAnimatedScore] = useState(0);
+
+  useEffect(() => {
+    if (score == null) return;
+    const endValue = Number(score) || 0;
+    const startValue = endValue > 0 ? 1 : 0;
+
+    let startTimestamp = null;
+    const duration = 1500;
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      setAnimatedScore(startValue + easeOut * (endValue - startValue));
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else {
+        setAnimatedScore(endValue);
+      }
+    };
+    window.requestAnimationFrame(step);
+  }, [score]);
+
+  const radius = 90;
+  const strokeWidth = 18;
+  const circumference = Math.PI * radius;
+  const strokeDashoffset =
+    circumference - (animatedScore / 100) * circumference;
+
+  return (
+    <div className="relative flex flex-col items-center justify-start w-64 h-36 overflow-hidden">
+      <svg
+        width="240"
+        height="130"
+        viewBox="0 0 240 130"
+        className="overflow-visible mt-3"
+      >
+        {/* Background Arc */}
+        <path
+          d="M 30 110 A 90 90 0 0 1 210 110"
+          fill="none"
+          stroke="#d1fae5"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+        />
+        {/* Foreground Arc */}
+        <path
+          d="M 30 110 A 90 90 0 0 1 210 110"
+          fill="none"
+          stroke="#059669"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+        />
+      </svg>
+      <div className="absolute top-[65%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center">
+        <span className="text-6xl font-black text-slate-900 tracking-tighter leading-none">
+          {Math.round(animatedScore)}
+        </span>
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+          / 100
+        </span>
+      </div>
+    </div>
+  );
+}
+
 /* ────────────────────────────────────────────────────────────────────────
    DASHBOARD
    ──────────────────────────────────────────────────────────────────────── */
@@ -425,19 +546,7 @@ export default function Dashboard() {
         <div className="mb-10">
           <div className="relative flex flex-col items-center justify-center rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-10 shadow-md">
             <div className="flex flex-col items-center md:flex-row md:gap-16">
-              <div
-                className="circular-progress relative flex h-52 w-52 items-center justify-center rounded-full shadow-inner"
-                style={progressStyle}
-              >
-                <div className="flex flex-col items-center justify-center">
-                  <span className="text-6xl font-black text-slate-900 tracking-tighter">
-                    {scoreValue}
-                  </span>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    / 100
-                  </span>
-                </div>
-              </div>
+              <AnimatedSemicircle score={scoreValue} />
               <div className="mt-8 text-center md:mt-0 md:text-left">
                 <div
                   className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold ${scoreLabelColor(scoreValue)}`}
@@ -485,21 +594,14 @@ export default function Dashboard() {
                       {m.label}
                     </p>
                     <p className="text-lg font-bold text-slate-900">
-                      {m.value}
-                      <span className="text-xs text-slate-400 font-medium">
+                      <AnimatedNumber value={m.value} />
+                      <span className="text-xs text-slate-400 font-medium ml-0.5">
                         {m.suffix}
                       </span>
                     </p>
                   </div>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className="h-full bg-emerald-500 rounded-full transition-all duration-700"
-                    style={{
-                      width: `${Math.min((m.value / m.max) * 100, 100)}%`,
-                    }}
-                  ></div>
-                </div>
+                <AnimatedProgressBar value={m.value} max={m.max} />
               </div>
             ))}
           </div>
@@ -531,7 +633,7 @@ export default function Dashboard() {
                     Net Worth
                   </p>
                   <p className="text-2xl font-black text-emerald-700">
-                    {fmt(netWorth.net_worth)}
+                    <AnimatedNumber value={netWorth.net_worth} formatFn={fmt} />
                   </p>
                 </div>
                 <div className="text-center p-4 rounded-xl bg-blue-50">
@@ -539,7 +641,10 @@ export default function Dashboard() {
                     Total Assets
                   </p>
                   <p className="text-2xl font-black text-blue-700">
-                    {fmt(netWorth.total_assets)}
+                    <AnimatedNumber
+                      value={netWorth.total_assets}
+                      formatFn={fmt}
+                    />
                   </p>
                 </div>
                 <div className="text-center p-4 rounded-xl bg-red-50">
@@ -547,7 +652,10 @@ export default function Dashboard() {
                     Total Liabilities
                   </p>
                   <p className="text-2xl font-black text-red-600">
-                    {fmt(netWorth.total_liabilities)}
+                    <AnimatedNumber
+                      value={netWorth.total_liabilities}
+                      formatFn={fmt}
+                    />
                   </p>
                 </div>
                 <div className="text-center p-4 rounded-xl bg-amber-50">
@@ -555,7 +663,10 @@ export default function Dashboard() {
                     Liquidity Ratio
                   </p>
                   <p className="text-2xl font-black text-amber-700">
-                    {pct(netWorth.liquidity_ratio)}
+                    <AnimatedNumber
+                      value={netWorth.liquidity_ratio}
+                      formatFn={pct}
+                    />
                   </p>
                 </div>
                 {netWorth.asset_allocation &&
@@ -573,7 +684,7 @@ export default function Dashboard() {
                             >
                               {type.replace(/_/g, " ")}:{" "}
                               <span className="text-emerald-600">
-                                {pct(val)}
+                                <AnimatedNumber value={val} formatFn={pct} />
                               </span>
                             </span>
                           ),
@@ -635,7 +746,10 @@ export default function Dashboard() {
                         <p>
                           Target:{" "}
                           <span className="text-slate-800 font-semibold">
-                            {fmt(g.target_amount)}
+                            <AnimatedNumber
+                              value={g.target_amount}
+                              formatFn={fmt}
+                            />
                           </span>
                         </p>
                       )}
@@ -643,7 +757,11 @@ export default function Dashboard() {
                         <p>
                           Required SIP:{" "}
                           <span className="text-slate-800 font-semibold">
-                            {fmt(g.required_monthly_sip)}/mo
+                            <AnimatedNumber
+                              value={g.required_monthly_sip}
+                              formatFn={fmt}
+                            />
+                            /mo
                           </span>
                         </p>
                       )}
@@ -653,7 +771,10 @@ export default function Dashboard() {
                           <span
                             className={`font-semibold ${g.funding_gap > 0 ? "text-red-600" : "text-emerald-600"}`}
                           >
-                            {fmt(g.funding_gap)}
+                            <AnimatedNumber
+                              value={g.funding_gap}
+                              formatFn={fmt}
+                            />
                           </span>
                         </p>
                       )}
@@ -735,7 +856,9 @@ export default function Dashboard() {
                             className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-semibold text-slate-700"
                           >
                             {type.replace(/_/g, " ")}:{" "}
-                            <span className="text-indigo-600">{pct(val)}</span>
+                            <span className="text-indigo-600">
+                              <AnimatedNumber value={val} formatFn={pct} />
+                            </span>
                           </span>
                         ),
                       )}
@@ -833,11 +956,14 @@ export default function Dashboard() {
                                 {key.replace(/_/g, " ")}
                               </span>
                               <span className="font-bold text-slate-800">
-                                {typeof val === "number"
-                                  ? val > 1000
-                                    ? fmt(val)
-                                    : pct(val)
-                                  : String(val)}
+                                {typeof val === "number" ? (
+                                  <AnimatedNumber
+                                    value={val}
+                                    formatFn={val > 1000 ? fmt : pct}
+                                  />
+                                ) : (
+                                  String(val)
+                                )}
                               </span>
                             </div>
                           ))}

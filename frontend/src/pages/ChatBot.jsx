@@ -3,6 +3,7 @@ import DashboardNavbar from "../components/DashboardNavbar";
 import { askChatbot } from "../services/modelServices";
 import { CircleUserRound } from "lucide-react";
 import chatbot from "../assets/chatbot.png";
+import logo from "../assets/logo.png";
 
 export default function ChatBot() {
   const [messages, setMessages] = useState([
@@ -161,10 +162,12 @@ export default function ChatBot() {
             >
               {/* AI Avatar */}
               {msg.role === "assistant" && (
-                <div className="h-9 w-9 rounded-full bg-emerald-500 flex items-center justify-center mr-3 mt-1 shrink-0 shadow-sm">
-                  <span className="material-symbols-outlined text-white text-base">
-                    smart_toy
-                  </span>
+                <div className="h-9 w-9 rounded-full bg-white flex items-center justify-center mr-3 mt-1 shrink-0 shadow-sm border border-emerald-100 p-1">
+                  <img
+                    src={chatbot}
+                    alt="Fundify AI"
+                    className="w-full h-full object-contain"
+                  />
                 </div>
               )}
 
@@ -210,10 +213,12 @@ export default function ChatBot() {
           {/* Typing indicator */}
           {isLoading && (
             <div className="flex justify-start chat-message-animate">
-              <div className="h-9 w-9 rounded-full bg-emerald-500 flex items-center justify-center mr-3 mt-1 shrink-0 shadow-sm">
-                <span className="material-symbols-outlined text-white text-base">
-                  smart_toy
-                </span>
+              <div className="h-9 w-9 rounded-full bg-white flex items-center justify-center mr-3 mt-1 shrink-0 shadow-sm border border-emerald-100 p-1">
+                <img
+                  src={chatbot}
+                  alt="Fundify AI"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="text-[11px] font-bold uppercase tracking-wider mb-1.5 text-emerald-600">
@@ -234,12 +239,7 @@ export default function ChatBot() {
 
         {/* Input Area */}
         <div className="sticky bottom-0 bg-[#f7faf8] pt-3 pb-2">
-          <div className="flex items-center gap-3 bg-white rounded-full border border-slate-200 shadow-sm px-4 py-1.5 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-            <button className="text-slate-400 hover:text-emerald-500 transition-colors shrink-0">
-              <span className="material-symbols-outlined text-xl">
-                attach_file
-              </span>
-            </button>
+          <div className="flex items-center gap-3 bg-white rounded-full border border-slate-200 shadow-sm px-10 py-1.5 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
             <textarea
               ref={inputRef}
               value={input}
