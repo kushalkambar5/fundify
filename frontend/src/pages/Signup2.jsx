@@ -101,7 +101,7 @@ function Signup2({ onNext, email }) {
   };
 
   return (
-    <div className="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+    <div className="font-display bg-white text-slate-900 min-h-screen flex flex-col">
       <AuthSupportHeader />
 
       <main className="flex flex-col items-center justify-center px-4 py-12 md:py-24 flex-grow">
@@ -113,29 +113,27 @@ function Signup2({ onNext, email }) {
               </span>
               <p className="text-sm font-medium text-slate-500">Step 2 of 3</p>
             </div>
-            <p className="text-sm font-bold text-slate-900 dark:text-white">
-              66%
-            </p>
+            <p className="text-sm font-bold text-emerald-600">66%</p>
           </div>
-          <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-            <div className="bg-emerald-accent h-full w-2/3 transition-all duration-500"></div>
+          <div className="w-full bg-emerald-50 h-2 rounded-full overflow-hidden">
+            <div className="bg-emerald-500 h-full w-2/3 transition-all duration-500 shadow-sm shadow-emerald-200"></div>
           </div>
         </div>
 
-        <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-8">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-emerald-100 p-8">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-800 mb-4">
-              <span className="material-symbols-outlined text-3xl text-navy dark:text-white">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-50 mb-4 shadow-sm">
+              <span className="material-symbols-outlined text-3xl text-emerald-600">
                 forward_to_inbox
               </span>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">
               Verify Your Email
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+            <p className="text-slate-500 text-sm leading-relaxed">
               We've sent a 6-digit verification code to
               <br />
-              <span className="font-semibold text-slate-900 dark:text-slate-200">
+              <span className="font-semibold text-emerald-700">
                 {email || "your email"}
               </span>
             </p>
@@ -157,11 +155,11 @@ function Signup2({ onNext, email }) {
                   key={index}
                   ref={(el) => (inputRefs.current[index] = el)}
                   autoFocus={index === 0}
-                  className={`w-full aspect-square text-center text-2xl font-bold rounded-lg border-2 ${
+                  className={`w-full aspect-square text-center text-2xl font-bold rounded-xl border-2 ${
                     error
-                      ? "border-red-300 focus:border-red-500 focus:ring-red-500/10"
-                      : "border-slate-200 dark:border-slate-700 focus:border-emerald-accent focus:ring-emerald-accent/10"
-                  } bg-transparent focus:ring-4 transition-all text-slate-900 dark:text-white outline-none`}
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                      : "border-slate-200 focus:border-emerald-400 focus:ring-emerald-100"
+                  } bg-slate-50 focus:bg-white focus:ring-2 transition-all text-slate-900 outline-none`}
                   maxLength="1"
                   type="text"
                   inputMode="numeric"
@@ -176,10 +174,10 @@ function Signup2({ onNext, email }) {
 
             <div className="space-y-4">
               <button
-                className={`w-full text-white font-bold py-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 ${
+                className={`w-full text-white font-bold py-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 ${
                   !isOtpComplete || loading
-                    ? "bg-slate-300 cursor-not-allowed"
-                    : "bg-navy hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700"
+                    ? "bg-emerald-300 shadow-none cursor-not-allowed"
+                    : "bg-emerald-500 hover:bg-emerald-600 hover:shadow-lg hover:-translate-y-0.5 shadow-emerald-200"
                 }`}
                 type="submit"
                 disabled={!isOtpComplete || loading}
@@ -205,7 +203,7 @@ function Signup2({ onNext, email }) {
                     {timer > 0 ? (
                       <>
                         Resend code in{" "}
-                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                        <span className="font-mono font-bold text-emerald-600">
                           0:{timer.toString().padStart(2, "0")}
                         </span>
                       </>
@@ -214,7 +212,7 @@ function Signup2({ onNext, email }) {
                         type="button"
                         onClick={handleResendOtp}
                         disabled={loading}
-                        className="font-bold text-navy dark:text-slate-200 hover:text-emerald-accent underline underline-offset-4"
+                        className="font-bold text-emerald-600 hover:text-emerald-700 underline underline-offset-4"
                       >
                         Resend code now
                       </button>
@@ -222,9 +220,9 @@ function Signup2({ onNext, email }) {
                   </span>
                 </div>
                 <button
-                  className="text-sm font-semibold text-navy dark:text-slate-300 hover:underline underline-offset-4 flex items-center gap-1"
+                  className="text-sm font-semibold text-slate-500 hover:text-emerald-600 transition-colors flex items-center gap-1"
                   type="button"
-                  onClick={() => window.location.reload()} // Simplified back behavior for now
+                  onClick={() => window.location.reload()}
                 >
                   <span className="material-symbols-outlined text-sm">
                     edit
@@ -237,14 +235,14 @@ function Signup2({ onNext, email }) {
         </div>
 
         <div className="mt-12 text-center max-w-sm">
-          <div className="flex items-center justify-center gap-4 text-slate-400 dark:text-slate-600 mb-4">
+          <div className="flex items-center justify-center gap-4 text-emerald-200 mb-4">
             <span className="material-symbols-outlined text-4xl">
               verified_user
             </span>
             <span className="material-symbols-outlined text-4xl">lock</span>
             <span className="material-symbols-outlined text-4xl">shield</span>
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest font-bold">
+          <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">
             Bank-grade 256-bit encryption
           </p>
         </div>

@@ -1,15 +1,18 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 dark:border-white/5 bg-white/80 dark:bg-background-dark/90 backdrop-blur-xl shadow-sm dark:shadow-none">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <div className="flex items-center gap-3 group cursor-pointer">
-          <div className="size-10 rounded-xl bg-gradient-to-br from-primary/20 to-emerald-400/20 flex items-center justify-center text-primary border border-primary/20 group-hover:from-primary group-hover:to-emerald-400 group-hover:text-navy-deep group-hover:shadow-[0_0_15px_rgba(13,242,185,0.4)] transition-all duration-300">
-            <span className="material-symbols-outlined text-2xl font-bold">
-              query_stats
-            </span>
+          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-primary/20 group-hover:shadow-[0_0_15px_rgba(13,242,185,0.4)] transition-all duration-300 p-1 overflow-hidden">
+            <img
+              src={logo}
+              alt="Fundify Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <span className="text-navy-deep dark:text-navy-deep text-2xl font-black tracking-tight group-hover:text-primary transition-colors">
             Fundify

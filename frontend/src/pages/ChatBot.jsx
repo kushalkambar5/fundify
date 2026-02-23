@@ -1,13 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import DashboardNavbar from "../components/DashboardNavbar";
 import { askChatbot } from "../services/modelServices";
+import { CircleUserRound } from "lucide-react";
+import chatbot from "../assets/chatbot.png";
 
 export default function ChatBot() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
       content:
-        "Hello! I'm your **AI Financial Advisor**. I have access to your complete financial profile and can provide personalized advice.\n\nTry asking me things like:\n- *How can I improve my savings rate?*\n- *Am I on track for my retirement goal?*\n- *What's a good investment strategy for my risk profile?*",
+        "Hello! I'm your Fundify AI Assistant. I can help you analyze your spending habits, track your net worth growth, or provide insights into your investment portfolio. What would you like to explore today?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -25,17 +27,14 @@ export default function ChatBot() {
 
   const formatMessage = (text) => {
     if (!text) return "";
-    // Strip retrieval source citations like [CHUNK 1], [SOURCE], etc.
     let formatted = text.replace(/\[CHUNK \d+\]/g, "");
-    // Strip any remaining bracketed metadata tags and empty brackets
     formatted = formatted.replace(/\[\s*\]/g, "");
     formatted = formatted.replace(
       /\[(?:SOURCE|CONTEXT|REF|DOC|RETRIEVED)[^\]]*\]/gi,
       "",
     );
-    // Strip references to previous context / conversation history
     formatted = formatted.replace(
-      /(\*?\*?)(Based on |From |Using |Referring to )?(the )?(previous |prior |earlier |past )?(context|conversation|history|chat)(:|\.)?\*?\*?\s*/gi,
+      /(\*?\*?)(Based on |From |Using |Referring to )?(the )?(previous |prior |earlier |past )?(context|conversation|history|chat)(:|\.)?(\*?\*?)\s*/gi,
       "",
     );
     formatted = formatted.replace(/\*?\*?Previous Context:?\*?\*?\s*/gi, "");
@@ -45,7 +44,7 @@ export default function ChatBot() {
     formatted = formatted.replace(/\*(.+?)\*/g, "<em>$1</em>");
     // Line breaks
     formatted = formatted.replace(/\n/g, "<br/>");
-    // Lists (simple)
+    // Lists
     formatted = formatted.replace(
       /^- (.+)/gm,
       '<span class="flex items-start gap-2 mt-1"><span class="text-emerald-500 mt-0.5">&bull;</span><span>$1</span></span>',
@@ -96,84 +95,136 @@ export default function ChatBot() {
     }
   };
 
+  const handleClearHistory = () => {
+    setMessages([
+      {
+        role: "assistant",
+        content:
+          "Hello! I'm your Fundify AI Assistant. I can help you analyze your spending habits, track your net worth growth, or provide insights into your investment portfolio. What would you like to explore today?",
+      },
+    ]);
+  };
+
+  const quickActions = [
+    { label: "Check Credit Score", icon: "verified" },
+    { label: "Investment Advice", icon: "trending_up" },
+    { label: "Expense Analysis", icon: "receipt_long" },
+    { label: "Net Worth Summary", icon: "account_balance" },
+  ];
+
+  const handleQuickAction = (action) => {
+    setInput(action);
+    setTimeout(() => {
+      handleSend();
+    }, 50);
+  };
+
   return (
-    <div className="flex min-h-screen flex-col bg-white font-display text-slate-900">
+    <div className="flex min-h-screen flex-col bg-[#f7faf8] font-display text-slate-900">
       <DashboardNavbar />
 
       <main className="flex flex-1 flex-col max-w-4xl mx-auto w-full px-4 md:px-6">
-        {/* Header */}
-        <div className="py-6 border-b border-emerald-100">
-          <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-500 to-green-400 flex items-center justify-center shadow-md shadow-emerald-200">
-              <span className="material-symbols-outlined text-white text-xl">
-                smart_toy
-              </span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">
-                AI Financial Advisor
-              </h1>
-              <p className="text-xs text-slate-400 font-medium">
-                Personalized advice powered by your financial profile
-              </p>
-            </div>
-            <div className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="text-xs font-semibold text-emerald-700">
-                Online
-              </span>
-            </div>
-          </div>
+        {/* Title */}
+        <div className="pt-8 pb-5 text-center">
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-2 justify-center">
+            <img
+              src={chatbot}
+              alt="Fundify AI Assistant"
+              className="w-12 h-12"
+            />
+            Fundify AI Assistant
+          </h1>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto py-6 space-y-5 chat-scroll">
+        {/* Quick Action Chips */}
+        <div className="flex flex-wrap justify-center gap-2.5 pb-6">
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              onClick={() => handleQuickAction(action.label)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 transition-all shadow-sm"
+            >
+              <span className="material-symbols-outlined text-base text-emerald-500">
+                {action.icon}
+              </span>
+              {action.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Chat Area */}
+        <div className="flex-1 overflow-y-auto pb-4 space-y-6 chat-scroll">
           {messages.map((msg, i) => (
             <div
               key={i}
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} chat-message-animate`}
             >
+              {/* AI Avatar */}
               {msg.role === "assistant" && (
-                <div className="h-8 w-8 rounded-lg bg-emerald-100 flex items-center justify-center mr-3 mt-1 shrink-0">
-                  <span className="material-symbols-outlined text-emerald-600 text-sm">
+                <div className="h-9 w-9 rounded-full bg-emerald-500 flex items-center justify-center mr-3 mt-1 shrink-0 shadow-sm">
+                  <span className="material-symbols-outlined text-white text-base">
                     smart_toy
                   </span>
                 </div>
               )}
-              <div
-                className={`max-w-[80%] rounded-2xl px-5 py-3.5 text-sm leading-relaxed ${
-                  msg.role === "user"
-                    ? "bg-emerald-500 text-white rounded-br-md shadow-md shadow-emerald-200"
-                    : msg.isError
-                      ? "bg-red-50 text-red-700 border border-red-100 rounded-bl-md"
-                      : "bg-slate-50 text-slate-800 border border-slate-100 rounded-bl-md"
-                }`}
-                dangerouslySetInnerHTML={{
-                  __html: formatMessage(msg.content),
-                }}
-              />
+
+              <div className="max-w-[75%] flex flex-col">
+                {/* Sender Label */}
+                <span
+                  className={`text-[11px] font-bold uppercase tracking-wider mb-1.5 ${
+                    msg.role === "user"
+                      ? "text-slate-400 text-right"
+                      : "text-emerald-600"
+                  }`}
+                >
+                  {msg.role === "user" ? "You" : "Fundify AI"}
+                </span>
+
+                {/* Message Bubble */}
+                <div
+                  className={`rounded-2xl px-5 py-4 text-sm leading-relaxed ${
+                    msg.role === "user"
+                      ? "bg-emerald-100 text-slate-800 rounded-br-md"
+                      : msg.isError
+                        ? "bg-red-50 text-red-700 border border-red-100 rounded-bl-md"
+                        : "bg-emerald-50/80 text-slate-700 border border-emerald-100 rounded-bl-md"
+                  }`}
+                  dangerouslySetInnerHTML={{
+                    __html: formatMessage(msg.content),
+                  }}
+                />
+              </div>
+
+              {/* User Avatar */}
               {msg.role === "user" && (
-                <div className="h-8 w-8 rounded-lg bg-emerald-500 flex items-center justify-center ml-3 mt-1 shrink-0">
-                  <span className="material-symbols-outlined text-white text-sm">
-                    person
-                  </span>
+                <div className="h-9 w-9 rounded-full bg-slate-700 flex items-center justify-center ml-3 mt-6 shrink-0 shadow-sm">
+                  <CircleUserRound
+                    className="h-5 w-5 text-white"
+                    strokeWidth={1.5}
+                  />
                 </div>
               )}
             </div>
           ))}
 
+          {/* Typing indicator */}
           {isLoading && (
             <div className="flex justify-start chat-message-animate">
-              <div className="h-8 w-8 rounded-lg bg-emerald-100 flex items-center justify-center mr-3 mt-1 shrink-0">
-                <span className="material-symbols-outlined text-emerald-600 text-sm">
+              <div className="h-9 w-9 rounded-full bg-emerald-500 flex items-center justify-center mr-3 mt-1 shrink-0 shadow-sm">
+                <span className="material-symbols-outlined text-white text-base">
                   smart_toy
                 </span>
               </div>
-              <div className="bg-slate-50 border border-slate-100 rounded-2xl rounded-bl-md px-5 py-4">
-                <div className="flex items-center gap-1.5">
-                  <div className="typing-dot w-2 h-2 rounded-full bg-emerald-400"></div>
-                  <div className="typing-dot w-2 h-2 rounded-full bg-emerald-400 delay-150"></div>
-                  <div className="typing-dot w-2 h-2 rounded-full bg-emerald-400 delay-300"></div>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-bold uppercase tracking-wider mb-1.5 text-emerald-600">
+                  Fundify AI
+                </span>
+                <div className="bg-emerald-50/80 border border-emerald-100 rounded-2xl rounded-bl-md px-5 py-4">
+                  <div className="flex items-center gap-1.5">
+                    <div className="typing-dot w-2 h-2 rounded-full bg-emerald-400"></div>
+                    <div className="typing-dot w-2 h-2 rounded-full bg-emerald-400 delay-150"></div>
+                    <div className="typing-dot w-2 h-2 rounded-full bg-emerald-400 delay-300"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -181,40 +232,59 @@ export default function ChatBot() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
-        <div className="sticky bottom-0 bg-white border-t border-emerald-100 py-4">
-          <div className="flex items-end gap-3">
-            <div className="flex-1 relative">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask about your finances..."
-                rows={1}
-                className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm text-slate-900 placeholder-slate-400 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
-                style={{ maxHeight: "120px" }}
-                onInput={(e) => {
-                  e.target.style.height = "auto";
-                  e.target.style.height =
-                    Math.min(e.target.scrollHeight, 120) + "px";
-                }}
-              />
-            </div>
+        {/* Input Area */}
+        <div className="sticky bottom-0 bg-[#f7faf8] pt-3 pb-2">
+          <div className="flex items-center gap-3 bg-white rounded-full border border-slate-200 shadow-sm px-4 py-1.5 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
+            <button className="text-slate-400 hover:text-emerald-500 transition-colors shrink-0">
+              <span className="material-symbols-outlined text-xl">
+                attach_file
+              </span>
+            </button>
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask Fundify about your financial health..."
+              rows={1}
+              className="flex-1 resize-none bg-transparent py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none"
+              style={{ maxHeight: "80px" }}
+              onInput={(e) => {
+                e.target.style.height = "auto";
+                e.target.style.height =
+                  Math.min(e.target.scrollHeight, 80) + "px";
+              }}
+            />
             <button
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
-              className="h-11 w-11 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center transition-all shadow-md shadow-emerald-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500 shrink-0"
+              className="h-10 w-10 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center transition-all shadow-md shadow-emerald-200 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-emerald-500 shrink-0"
             >
               <span className="material-symbols-outlined text-lg">
                 {isLoading ? "hourglass_top" : "send"}
               </span>
             </button>
           </div>
-          <p className="text-[10px] text-slate-400 text-center mt-2">
-            AI responses are based on your financial profile and regulatory
-            knowledge. Not financial advice.
+          <p className="text-[10px] text-emerald-600/70 text-center mt-2 font-medium">
+            Fundify AI can provide financial insights but does not replace
+            professional advice.
           </p>
+        </div>
+
+        {/* Status Bar */}
+        <div className="flex items-center justify-between py-3 border-t border-emerald-100 mt-1">
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-yellow-400"></span>
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
+              AI Engine Online
+            </span>
+          </div>
+          <button
+            onClick={handleClearHistory}
+            className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors"
+          >
+            Clear History
+          </button>
         </div>
       </main>
     </div>

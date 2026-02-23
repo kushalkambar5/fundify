@@ -751,10 +751,10 @@ function Signup3({ emailId, password }) {
                 <span className="text-xs font-semibold text-slate-700">
                   Step 3 of 3
                 </span>
-                <span className="text-xs font-bold text-blue-600">100%</span>
+                <span className="text-xs font-bold text-emerald-600">100%</span>
               </div>
-              <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
-                <div className="bg-blue-600 h-full w-full rounded-full"></div>
+              <div className="h-1.5 w-full bg-emerald-50 rounded-full overflow-hidden">
+                <div className="bg-emerald-500 h-full w-full rounded-full shadow-sm shadow-emerald-200"></div>
               </div>
             </div>
 
@@ -874,7 +874,7 @@ function Signup3({ emailId, password }) {
                 disabled={!allSaved}
                 className={`font-bold py-2.5 px-6 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2 whitespace-nowrap ${
                   allSaved
-                    ? "bg-blue-700 hover:bg-blue-800 text-white shadow-blue-700/20"
+                    ? "bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-700/20"
                     : "bg-slate-200 text-slate-400 shadow-none cursor-not-allowed"
                 }`}
               >
@@ -1145,21 +1145,21 @@ function Signup3({ emailId, password }) {
                       <button
                         type="button"
                         onClick={() => setRiskProfile("conservative")}
-                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "conservative" ? "font-bold bg-white shadow-sm border border-slate-100 text-blue-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
+                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "conservative" ? "font-bold bg-white shadow-sm border border-slate-100 text-emerald-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
                       >
                         Conservative
                       </button>
                       <button
                         type="button"
                         onClick={() => setRiskProfile("moderate")}
-                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "moderate" ? "font-bold bg-white shadow-sm border border-slate-100 text-blue-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
+                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "moderate" ? "font-bold bg-white shadow-sm border border-slate-100 text-emerald-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
                       >
                         Moderate
                       </button>
                       <button
                         type="button"
                         onClick={() => setRiskProfile("aggressive")}
-                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "aggressive" ? "font-bold bg-white shadow-sm border border-slate-100 text-blue-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
+                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "aggressive" ? "font-bold bg-white shadow-sm border border-slate-100 text-emerald-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
                       >
                         Aggressive
                       </button>
@@ -1263,7 +1263,7 @@ function Signup3({ emailId, password }) {
                   <button
                     type="button"
                     onClick={addIncomeRow}
-                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1 mt-4"
+                    className="text-emerald-600 font-semibold text-sm hover:text-emerald-700 transition-colors flex items-center gap-1 mt-4"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       add
@@ -1368,7 +1368,7 @@ function Signup3({ emailId, password }) {
                   <button
                     type="button"
                     onClick={addExpenseRow}
-                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1 mt-4"
+                    className="text-emerald-600 font-semibold text-sm hover:text-emerald-700 transition-colors flex items-center gap-1 mt-4"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       add
@@ -1680,7 +1680,7 @@ function Signup3({ emailId, password }) {
                   <button
                     type="button"
                     onClick={addLiabilityRow}
-                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1"
+                    className="text-emerald-600 font-semibold text-sm hover:text-emerald-700 transition-colors flex items-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       add
@@ -1828,7 +1828,7 @@ function Signup3({ emailId, password }) {
                   <button
                     type="button"
                     onClick={addInsuranceRow}
-                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1"
+                    className="text-emerald-600 font-semibold text-sm hover:text-emerald-700 transition-colors flex items-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       add
@@ -1998,7 +1998,7 @@ function Signup3({ emailId, password }) {
                   <button
                     type="button"
                     onClick={addGoalRow}
-                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1"
+                    className="text-emerald-600 font-semibold text-sm hover:text-emerald-700 transition-colors flex items-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       add

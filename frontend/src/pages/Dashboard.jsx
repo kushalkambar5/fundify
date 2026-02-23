@@ -397,13 +397,26 @@ export default function Dashboard() {
             </div>
             {error && <p className="text-red-500 text-sm mt-3">{error}</p>}
           </div>
-          <Link
-            to="/chatbot"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-400 text-white font-bold text-sm shadow-md shadow-emerald-200 hover:shadow-lg transition-all hover:-translate-y-0.5"
-          >
-            <span className="material-symbols-outlined text-lg">smart_toy</span>
-            Ask AI Advisor
-          </Link>
+          <div className="flex gap-3">
+            <Link
+              to="/onboarding"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-emerald-300 text-emerald-700 font-bold text-sm hover:bg-emerald-50 transition-all hover:-translate-y-0.5"
+            >
+              <span className="material-symbols-outlined text-lg">
+                post_add
+              </span>
+              Add more Info
+            </Link>
+            <Link
+              to="/chatbot"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-400 text-white font-bold text-sm shadow-md shadow-emerald-200 hover:shadow-lg transition-all hover:-translate-y-0.5"
+            >
+              <span className="material-symbols-outlined text-lg">
+                smart_toy
+              </span>
+              Ask AI Advisor
+            </Link>
+          </div>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}

@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import logo from "../../assets/logo.png";
 
 function AuthOnboardingHeader() {
   return (
@@ -7,23 +8,18 @@ function AuthOnboardingHeader() {
       <div className="max-w-[1440px] mx-auto px-6">
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group cursor-pointer">
-            <div className="bg-[#1A202C] text-white p-1.5 rounded-lg flex items-center justify-center">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 48 48"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  clipRule="evenodd"
-                  d="M47.2426 24L24 47.2426L0.757355 24L24 0.757355L47.2426 24ZM12.2426 21H35.7574L24 9.24264L12.2426 21Z"
-                  fill="currentColor"
-                  fillRule="evenodd"
-                ></path>
-              </svg>
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 group cursor-pointer"
+          >
+            <div className="w-8 h-8 shadow-md shadow-emerald-200 rounded-lg group-hover:shadow-lg transition-all overflow-hidden bg-white flex items-center justify-center p-0.5 border border-emerald-100">
+              <img
+                src={logo}
+                alt="Fundify Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
-            <h1 className="text-[#1A202C] text-xl font-bold tracking-tight">
+            <h1 className="text-slate-900 text-xl font-bold tracking-tight group-hover:text-emerald-600 transition-colors">
               Fundify
             </h1>
           </Link>
