@@ -1,14 +1,95 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "../services/axiosInstance";
+import {
+  calculateHealthScore,
+  getNetWorth,
+  getGoalFeasibility,
+  getPortfolioAlignment,
+  getStressTest,
+} from "../services/modelServices";
 import DashboardNavbar from "../components/DashboardNavbar";
 
+/* ─── Helpers ──────────────────────────────────────────────────────────── */
+const fmt = (n) =>
+  n == null
+    ? "—"
+    : Number(n).toLocaleString("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+      });
+
+const pct = (n) => (n == null ? "—" : `${Number(n).toFixed(1)}%`);
+
+const scoreLabel = (s) =>
+  s >= 80 ? "Excellent" : s >= 60 ? "Good" : s >= 40 ? "Fair" : "Needs Work";
+
+const scoreLabelColor = (s) =>
+  s >= 80
+    ? "bg-emerald-100 text-emerald-700"
+    : s >= 60
+      ? "bg-green-100 text-green-700"
+      : s >= 40
+        ? "bg-amber-100 text-amber-700"
+        : "bg-red-100 text-red-700";
+
+/* ─── Small reusable section wrapper ───────────────────────────────────── */
+function SectionLoader() {
+  return (
+    <div className="flex items-center justify-center py-12">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+    </div>
+  );
+}
+
+function SectionError({ message, onRetry }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 gap-3">
+      <div className="flex items-center gap-2 text-red-500 text-sm font-medium">
+        <span className="material-symbols-outlined text-base">error</span>
+        {message}
+      </div>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="text-xs font-bold text-emerald-600 hover:underline"
+        >
+          Try Again
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   DASHBOARD
+   ──────────────────────────────────────────────────────────────────────── */
 export default function Dashboard() {
+  // ── Health Score ──
   const [scoreData, setScoreData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCalculating, setIsCalculating] = useState(false);
   const [error, setError] = useState(null);
 
+  // ── Analytics ──
+  const [netWorth, setNetWorth] = useState(null);
+  const [netWorthLoading, setNetWorthLoading] = useState(false);
+  const [netWorthError, setNetWorthError] = useState(null);
+
+  const [goals, setGoals] = useState(null);
+  const [goalsLoading, setGoalsLoading] = useState(false);
+  const [goalsError, setGoalsError] = useState(null);
+
+  const [portfolio, setPortfolio] = useState(null);
+  const [portfolioLoading, setPortfolioLoading] = useState(false);
+  const [portfolioError, setPortfolioError] = useState(null);
+
+  const [stress, setStress] = useState(null);
+  const [stressLoading, setStressLoading] = useState(false);
+  const [stressError, setStressError] = useState(null);
+
+  /* ── Fetch existing score ── */
   const fetchScore = async () => {
     try {
       setIsLoading(true);
@@ -19,60 +100,159 @@ export default function Dashboard() {
       } else {
         setScoreData(null);
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       setError("Failed to fetch initial score.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const calculateScore = async () => {
+  /* ── Calculate new score ── */
+  const doCalculateScore = async () => {
     try {
       setIsCalculating(true);
       setError(null);
-      const res = await axios.post("/score/financial-health");
-      if (res.data) {
+      const data = await calculateHealthScore();
+      if (data?.financial_health_score) {
+        const fhs = data.financial_health_score;
         setScoreData({
-          score: res.data.score,
+          score: fhs.score,
           breakdown: {
-            savingsRate:
-              res.data.breakdown?.savings_rate ||
-              res.data.breakdown?.savingsRate ||
-              0,
-            emergencyFund:
-              res.data.breakdown?.emergency_fund ||
-              res.data.breakdown?.emergencyFund ||
-              0,
-            debtRatio:
-              res.data.breakdown?.debt_ratio ||
-              res.data.breakdown?.debtRatio ||
-              0,
-            diversification: res.data.breakdown?.diversification || 0,
-            insuranceCoverage:
-              res.data.breakdown?.insurance_coverage ||
-              res.data.breakdown?.insuranceCoverage ||
-              0,
+            savingsRate: fhs.breakdown.savings_rate,
+            emergencyFund: fhs.breakdown.emergency_fund,
+            debtRatio: fhs.breakdown.debt_ratio,
+            diversification: fhs.breakdown.diversification,
+            insuranceCoverage: fhs.breakdown.insurance_coverage,
           },
         });
       }
-    } catch (err) {
-      console.error(err);
-      setError(
-        "Failed to calculate financial health score. Please ensure you have completed all onboarding steps.",
-      );
+    } catch {
+      setError("Failed to calculate score. Please complete onboarding first.");
     } finally {
       setIsCalculating(false);
     }
   };
 
+  /* ── Analytics loaders ── */
+  const fetchNetWorth = async () => {
+    try {
+      setNetWorthLoading(true);
+      setNetWorthError(null);
+      const data = await getNetWorth();
+      setNetWorth(data.net_worth_analysis || data);
+    } catch {
+      setNetWorthError("Failed to load net worth analysis.");
+    } finally {
+      setNetWorthLoading(false);
+    }
+  };
+
+  const fetchGoals = async () => {
+    try {
+      setGoalsLoading(true);
+      setGoalsError(null);
+      const data = await getGoalFeasibility();
+      setGoals(data.goal_feasibility || data);
+    } catch {
+      setGoalsError("Failed to load goal analysis.");
+    } finally {
+      setGoalsLoading(false);
+    }
+  };
+
+  const fetchPortfolio = async () => {
+    try {
+      setPortfolioLoading(true);
+      setPortfolioError(null);
+      const data = await getPortfolioAlignment();
+      setPortfolio(data.portfolio_alignment || data);
+    } catch {
+      setPortfolioError("Failed to load portfolio analysis.");
+    } finally {
+      setPortfolioLoading(false);
+    }
+  };
+
+  const fetchStress = async () => {
+    try {
+      setStressLoading(true);
+      setStressError(null);
+      const data = await getStressTest();
+      setStress(data.stress_test || data);
+    } catch {
+      setStressError("Failed to load stress test.");
+    } finally {
+      setStressLoading(false);
+    }
+  };
+
+  /* ── Initial load ── */
   useEffect(() => {
     fetchScore();
   }, []);
 
+  /* ── Load analytics once score is available ── */
+  useEffect(() => {
+    if (scoreData) {
+      fetchNetWorth();
+      fetchGoals();
+      fetchPortfolio();
+      fetchStress();
+    }
+  }, [scoreData]);
+
+  /* ── Derived ── */
   const scoreValue = scoreData?.score || 0;
   const progressStyle = { "--progress": `${scoreValue}%` };
+  const bd = scoreData?.breakdown || {};
 
+  /* ── Breakdown metric cards config ── */
+  const metrics = [
+    {
+      label: "Savings Rate",
+      value: bd.savingsRate ?? 0,
+      max: 25,
+      icon: "savings",
+      color: "emerald",
+      suffix: "/25",
+    },
+    {
+      label: "Emergency Fund",
+      value: bd.emergencyFund ?? 0,
+      max: 20,
+      icon: "shield",
+      color: "amber",
+      suffix: "/20",
+    },
+    {
+      label: "Debt Ratio",
+      value: bd.debtRatio ?? 0,
+      max: 20,
+      icon: "credit_score",
+      color: "teal",
+      suffix: "/20",
+    },
+    {
+      label: "Diversification",
+      value: bd.diversification ?? 0,
+      max: 15,
+      icon: "analytics",
+      color: "green",
+      suffix: "/15",
+    },
+    {
+      label: "Insurance Coverage",
+      value: bd.insuranceCoverage ?? 0,
+      max: 20,
+      icon: "health_and_safety",
+      color: "cyan",
+      suffix: "/20",
+    },
+  ];
+
+  /* ───────────────────────────────────────────────────────────────────── */
+  /* RENDER: Footer                                                       */
+  /* ───────────────────────────────────────────────────────────────────── */
   const renderFooter = () => (
     <footer className="mt-12 border-t border-emerald-100 bg-emerald-50 px-10 py-10">
       <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-6 md:flex-row">
@@ -99,23 +279,14 @@ export default function Dashboard() {
           >
             Terms & Conditions
           </Link>
-          <a
-            href="#"
-            className="text-xs font-semibold text-slate-500 hover:text-emerald-600 transition-colors"
-          >
-            Security
-          </a>
-          <a
-            href="#"
-            className="text-xs font-semibold text-slate-500 hover:text-emerald-600 transition-colors"
-          >
-            Support
-          </a>
         </div>
       </div>
     </footer>
   );
 
+  /* ───────────────────────────────────────────────────────────────────── */
+  /* RENDER: Initial Load                                                  */
+  /* ───────────────────────────────────────────────────────────────────── */
   if (isLoading) {
     return (
       <div className="relative flex min-h-screen flex-col bg-white font-display text-slate-900">
@@ -128,34 +299,30 @@ export default function Dashboard() {
     );
   }
 
+  /* ───────────────────────────────────────────────────────────────────── */
+  /* RENDER: No Score — Onboarding CTA                                     */
+  /* ───────────────────────────────────────────────────────────────────── */
   if (!scoreData) {
     return (
       <div className="relative flex min-h-screen flex-col bg-white font-display text-slate-900 antialiased overflow-hidden">
-        {/* Subtle Background Glow */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-100/60 blur-[120px] rounded-full"></div>
-
         <DashboardNavbar />
         <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-6 py-12 md:px-10 text-center relative z-10">
           <div className="max-w-lg w-full p-10 md:p-12 border border-emerald-100 rounded-[2rem] bg-white backdrop-blur-xl shadow-xl shadow-emerald-100/50 relative overflow-hidden group">
-            {/* Inner subtle glow */}
             <div className="absolute inset-0 bg-gradient-to-b from-emerald-50/60 to-transparent pointer-events-none rounded-[2rem]"></div>
-
             <div className="relative">
               <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-100 to-green-50 shadow-inner">
                 <span className="material-symbols-outlined text-[40px] text-emerald-600">
                   analytics
                 </span>
               </div>
-
               <h2 className="text-3xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-emerald-700">
                 Unlock Your Financial Insights
               </h2>
-
               <p className="text-slate-500 mb-10 text-lg leading-relaxed max-w-sm mx-auto">
-                We need to calculate your initial financial health score to
-                populate your dashboard. This generates a tailored AI profile.
+                Calculate your initial financial health score to populate your
+                full AI-powered dashboard.
               </p>
-
               {error && (
                 <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100">
                   <p className="text-red-600 text-sm font-semibold flex items-center justify-center gap-2">
@@ -166,13 +333,11 @@ export default function Dashboard() {
                   </p>
                 </div>
               )}
-
               <button
-                onClick={calculateScore}
+                onClick={doCalculateScore}
                 disabled={isCalculating}
                 className="relative overflow-hidden w-full group rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 py-4 transition-all duration-300 shadow-lg shadow-emerald-200 hover:shadow-xl hover:shadow-emerald-300 disabled:opacity-75 disabled:cursor-not-allowed hover:-translate-y-0.5"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[length:200%_auto] animate-gradient"></div>
                 <div className="relative flex items-center justify-center gap-3">
                   {isCalculating ? (
                     <>
@@ -199,29 +364,26 @@ export default function Dashboard() {
     );
   }
 
-  // Once scoreData is present, map breakdown appropriately
-  const bd = scoreData.breakdown || {};
-  const sr = bd.savingsRate || 22;
-  const ef = bd.emergencyFund || 5;
-  const dr = bd.debtRatio || 15;
-  const div = bd.diversification || 90;
-
+  /* ───────────────────────────────────────────────────────────────────── */
+  /* RENDER: Full Dynamic Dashboard                                        */
+  /* ───────────────────────────────────────────────────────────────────── */
   return (
     <div className="relative flex min-h-screen flex-col bg-white font-display text-slate-900 antialiased">
       <DashboardNavbar />
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-12 md:px-10">
-        <div className="mb-12 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-10 md:px-10">
+        {/* ── Page Header ── */}
+        <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div className="text-center md:text-left">
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
               Financial Health Dashboard
             </h1>
             <div className="mt-2 flex items-center justify-center md:justify-start gap-3">
               <p className="text-slate-500 text-sm">
-                AI-powered fiscal analysis updated just now
+                AI-powered fiscal analysis
               </p>
               <button
-                onClick={calculateScore}
+                onClick={doCalculateScore}
                 disabled={isCalculating}
                 className="flex items-center gap-1.5 px-3 py-1 rounded-md border border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-colors text-xs font-semibold disabled:opacity-50"
               >
@@ -235,349 +397,475 @@ export default function Dashboard() {
             </div>
             {error && <p className="text-red-500 text-sm mt-3">{error}</p>}
           </div>
+          <Link
+            to="/chatbot"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-400 text-white font-bold text-sm shadow-md shadow-emerald-200 hover:shadow-lg transition-all hover:-translate-y-0.5"
+          >
+            <span className="material-symbols-outlined text-lg">smart_toy</span>
+            Ask AI Advisor
+          </Link>
         </div>
 
-        <div className="mb-12">
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/*  SECTION 1: Health Score Hero                                   */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="mb-10">
           <div className="relative flex flex-col items-center justify-center rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-10 shadow-md">
-            <div className="absolute left-10 top-10 hidden md:block">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Main Analysis
-              </span>
-            </div>
-            <div className="absolute right-10 top-10 hidden md:block">
-              <button
-                onClick={calculateScore}
-                disabled={isCalculating}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-xs font-bold uppercase tracking-wide"
-              >
-                <span
-                  className={`material-symbols-outlined text-sm ${isCalculating ? "animate-spin" : ""}`}
-                >
-                  sync
-                </span>
-                Update Score
-              </button>
-            </div>
-
             <div className="flex flex-col items-center md:flex-row md:gap-16">
               <div
-                className="circular-progress relative flex h-56 w-56 items-center justify-center rounded-full shadow-inner"
+                className="circular-progress relative flex h-52 w-52 items-center justify-center rounded-full shadow-inner"
                 style={progressStyle}
               >
                 <div className="flex flex-col items-center justify-center">
-                  <span className="text-7xl font-black text-slate-900 tracking-tighter">
+                  <span className="text-6xl font-black text-slate-900 tracking-tighter">
                     {scoreValue}
                   </span>
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    Score
+                    / 100
                   </span>
                 </div>
               </div>
-              <div className="mt-10 text-center md:mt-0 md:text-left">
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-4 py-1.5 text-sm font-bold text-emerald-700">
+              <div className="mt-8 text-center md:mt-0 md:text-left">
+                <div
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold ${scoreLabelColor(scoreValue)}`}
+                >
                   <span className="material-symbols-outlined text-base">
-                    check_circle
+                    {scoreValue >= 60 ? "check_circle" : "info"}
                   </span>
-                  Good Standing
+                  {scoreLabel(scoreValue)}
                 </div>
-                <h3 className="mt-4 text-3xl font-bold text-slate-900">
-                  Your Financial Health
+                <h3 className="mt-4 text-2xl font-bold text-slate-900">
+                  Your Financial Health Score
                 </h3>
-                <p className="mt-3 max-w-md text-slate-500 leading-relaxed text-lg">
-                  You're in the{" "}
-                  <span className="font-semibold text-slate-900">top 15%</span>{" "}
-                  of peers. Your score is based on a holistic AI review of your
-                  profile.
+                <p className="mt-3 max-w-md text-slate-500 leading-relaxed">
+                  Calculated from 5 components: Savings Rate, Emergency Fund,
+                  Debt Ratio, Diversification, and Insurance Coverage.
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6 px-2">
-            <h2 className="text-xl font-bold text-slate-900">
-              Metric Breakdown
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Savings Rate */}
-            <div className="group rounded-xl border border-emerald-100 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-emerald-200">
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
-                    <span className="material-symbols-outlined">savings</span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-tight">
-                      Savings Rate
-                    </p>
-                    <p className="text-xl font-bold text-slate-900">{sr}%</p>
-                  </div>
-                </div>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-emerald-100">
-                <div
-                  className="h-full bg-emerald-500 rounded-full"
-                  style={{ width: `${Math.min(sr, 100)}%` }}
-                ></div>
-              </div>
-              <div className="mt-5 flex justify-between items-center">
-                <span className="text-xs font-medium text-slate-400">
-                  Target: 20%
-                </span>
-                <a
-                  href="#"
-                  className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1"
-                >
-                  Suggestions{" "}
-                  <span className="material-symbols-outlined text-xs">
-                    arrow_forward
-                  </span>
-                </a>
-              </div>
-            </div>
-
-            {/* Emergency Fund */}
-            <div className="group rounded-xl border border-emerald-100 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-emerald-200">
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
-                    <span className="material-symbols-outlined">shield</span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-tight">
-                      Emergency Fund
-                    </p>
-                    <p className="text-xl font-bold text-slate-900">{ef} mo.</p>
-                  </div>
-                </div>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-amber-100">
-                <div
-                  className="h-full bg-amber-500 rounded-full"
-                  style={{ width: `${Math.min((ef / 6) * 100, 100)}%` }}
-                ></div>
-              </div>
-              <div className="mt-5 flex justify-between items-center">
-                <span className="text-xs font-medium text-slate-400">
-                  Target 6 mo.
-                </span>
-                <a
-                  href="#"
-                  className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1"
-                >
-                  Suggestions{" "}
-                  <span className="material-symbols-outlined text-xs">
-                    arrow_forward
-                  </span>
-                </a>
-              </div>
-            </div>
-
-            {/* Debt Ratio */}
-            <div className="group rounded-xl border border-emerald-100 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-emerald-200">
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-100 text-teal-600">
-                    <span className="material-symbols-outlined">
-                      credit_score
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/*  SECTION 2: Score Breakdown                                     */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="mb-10">
+          <h2 className="text-xl font-bold text-slate-900 mb-5 px-1">
+            Score Breakdown
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {metrics.map((m) => (
+              <div
+                key={m.label}
+                className="group rounded-xl border border-emerald-100 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-emerald-200"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div
+                    className={`flex h-9 w-9 items-center justify-center rounded-lg bg-${m.color}-100 text-${m.color}-600`}
+                  >
+                    <span className="material-symbols-outlined text-lg">
+                      {m.icon}
                     </span>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-tight">
-                      Debt Ratio
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">
+                      {m.label}
                     </p>
-                    <p className="text-xl font-bold text-slate-900">{dr}%</p>
-                  </div>
-                </div>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-teal-100">
-                <div
-                  className="h-full bg-emerald-500 rounded-full"
-                  style={{ width: `${Math.min(dr, 100)}%` }}
-                ></div>
-              </div>
-              <div className="mt-5 flex justify-between items-center">
-                <span className="text-xs font-medium text-slate-400">
-                  Healthy range
-                </span>
-                <a
-                  href="#"
-                  className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1"
-                >
-                  Suggestions{" "}
-                  <span className="material-symbols-outlined text-xs">
-                    arrow_forward
-                  </span>
-                </a>
-              </div>
-            </div>
-
-            {/* Diversification */}
-            <div className="group rounded-xl border border-emerald-100 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-emerald-200">
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 text-green-600">
-                    <span className="material-symbols-outlined">analytics</span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-tight">
-                      Diversification
-                    </p>
-                    <p className="text-xl font-bold text-slate-900">
-                      {div > 70 ? "High" : div > 40 ? "Medium" : "Low"}
+                    <p className="text-lg font-bold text-slate-900">
+                      {m.value}
+                      <span className="text-xs text-slate-400 font-medium">
+                        {m.suffix}
+                      </span>
                     </p>
                   </div>
                 </div>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-green-100">
-                <div
-                  className="h-full bg-emerald-500 rounded-full"
-                  style={{ width: `${Math.min(div, 100)}%` }}
-                ></div>
-              </div>
-              <div className="mt-5 flex justify-between items-center">
-                <span className="text-xs font-medium text-slate-400">
-                  Quality Index
-                </span>
-                <a
-                  href="#"
-                  className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1"
-                >
-                  Suggestions{" "}
-                  <span className="material-symbols-outlined text-xs">
-                    arrow_forward
-                  </span>
-                </a>
-              </div>
-            </div>
-
-            {/* Net Cash Flow */}
-            <div className="group rounded-xl border border-emerald-100 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-emerald-200">
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 text-cyan-600">
-                    <span className="material-symbols-outlined">payments</span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-tight">
-                      Net Cash Flow
-                    </p>
-                    <p className="text-xl font-bold text-slate-900">Positive</p>
-                  </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-700"
+                    style={{
+                      width: `${Math.min((m.value / m.max) * 100, 100)}%`,
+                    }}
+                  ></div>
                 </div>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-emerald-100">
-                <div
-                  className="h-full bg-emerald-500 rounded-full"
-                  style={{ width: "75%" }}
-                ></div>
-              </div>
-              <div className="mt-5 flex justify-between items-center">
-                <span className="text-xs font-medium text-slate-400">
-                  Stable income
-                </span>
-                <a
-                  href="#"
-                  className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1"
-                >
-                  Suggestions{" "}
-                  <span className="material-symbols-outlined text-xs">
-                    arrow_forward
-                  </span>
-                </a>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto w-full">
-          <div className="rounded-2xl border border-emerald-100 bg-white p-8 shadow-md">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
-                <span className="material-symbols-outlined text-2xl">
-                  psychology
-                </span>
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/*  SECTION 3: Net Worth Analysis                                  */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-5 px-1">
+            <div className="h-9 w-9 rounded-lg bg-blue-100 flex items-center justify-center">
+              <span className="material-symbols-outlined text-blue-600 text-lg">
+                account_balance
+              </span>
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">
+              Net Worth Analysis
+            </h2>
+          </div>
+          <div className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+            {netWorthLoading ? (
+              <SectionLoader />
+            ) : netWorthError ? (
+              <SectionError message={netWorthError} onRetry={fetchNetWorth} />
+            ) : netWorth ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="text-center p-4 rounded-xl bg-emerald-50">
+                  <p className="text-xs font-bold text-slate-400 uppercase mb-1">
+                    Net Worth
+                  </p>
+                  <p className="text-2xl font-black text-emerald-700">
+                    {fmt(netWorth.net_worth)}
+                  </p>
+                </div>
+                <div className="text-center p-4 rounded-xl bg-blue-50">
+                  <p className="text-xs font-bold text-slate-400 uppercase mb-1">
+                    Total Assets
+                  </p>
+                  <p className="text-2xl font-black text-blue-700">
+                    {fmt(netWorth.total_assets)}
+                  </p>
+                </div>
+                <div className="text-center p-4 rounded-xl bg-red-50">
+                  <p className="text-xs font-bold text-slate-400 uppercase mb-1">
+                    Total Liabilities
+                  </p>
+                  <p className="text-2xl font-black text-red-600">
+                    {fmt(netWorth.total_liabilities)}
+                  </p>
+                </div>
+                <div className="text-center p-4 rounded-xl bg-amber-50">
+                  <p className="text-xs font-bold text-slate-400 uppercase mb-1">
+                    Liquidity Ratio
+                  </p>
+                  <p className="text-2xl font-black text-amber-700">
+                    {pct(netWorth.liquidity_ratio)}
+                  </p>
+                </div>
+                {netWorth.asset_allocation &&
+                  Object.keys(netWorth.asset_allocation).length > 0 && (
+                    <div className="col-span-full">
+                      <p className="text-xs font-bold text-slate-400 uppercase mb-3">
+                        Asset Allocation
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(netWorth.asset_allocation).map(
+                          ([type, val]) => (
+                            <span
+                              key={type}
+                              className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-semibold text-slate-700"
+                            >
+                              {type.replace(/_/g, " ")}:{" "}
+                              <span className="text-emerald-600">
+                                {pct(val)}
+                              </span>
+                            </span>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
               </div>
-              <h3 className="text-xl font-bold text-slate-900">
-                Improve Your Score: AI Recommendations
-              </h3>
+            ) : (
+              <p className="text-slate-400 text-sm text-center py-6">
+                No data available
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/*  SECTION 4: Goal Feasibility                                    */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-5 px-1">
+            <div className="h-9 w-9 rounded-lg bg-purple-100 flex items-center justify-center">
+              <span className="material-symbols-outlined text-purple-600 text-lg">
+                flag
+              </span>
             </div>
-            <ul className="space-y-6">
-              <li className="flex items-start gap-5 p-4 rounded-xl hover:bg-emerald-50 transition-colors">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                  <span className="material-symbols-outlined text-lg">
-                    bolt
-                  </span>
-                </div>
-                <div>
-                  <p className="text-base font-bold text-slate-900">
-                    Consolidate high-interest debt
-                  </p>
-                  <p className="text-sm text-slate-500 mt-1 leading-relaxed">
-                    Merging your 18% APR credit cards into a single 9% personal
-                    loan could boost your score by{" "}
-                    <span className="text-emerald-600 font-semibold">
-                      +4 points
+            <h2 className="text-xl font-bold text-slate-900">
+              Goal Feasibility
+            </h2>
+          </div>
+          <div className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+            {goalsLoading ? (
+              <SectionLoader />
+            ) : goalsError ? (
+              <SectionError message={goalsError} onRetry={fetchGoals} />
+            ) : goals && Array.isArray(goals) && goals.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {goals.map((g, i) => (
+                  <div
+                    key={i}
+                    className="p-5 rounded-xl border border-slate-100 hover:border-emerald-200 transition-all"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-bold text-slate-900 capitalize">
+                        {(g.goal_type || "Goal").replace(/_/g, " ")}
+                      </h4>
+                      <span
+                        className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                          g.feasible
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-red-100 text-red-600"
+                        }`}
+                      >
+                        {g.feasible ? "Feasible" : "At Risk"}
+                      </span>
+                    </div>
+                    <div className="space-y-1.5 text-xs text-slate-500">
+                      {g.target_amount != null && (
+                        <p>
+                          Target:{" "}
+                          <span className="text-slate-800 font-semibold">
+                            {fmt(g.target_amount)}
+                          </span>
+                        </p>
+                      )}
+                      {g.required_monthly_sip != null && (
+                        <p>
+                          Required SIP:{" "}
+                          <span className="text-slate-800 font-semibold">
+                            {fmt(g.required_monthly_sip)}/mo
+                          </span>
+                        </p>
+                      )}
+                      {g.funding_gap != null && (
+                        <p>
+                          Funding Gap:{" "}
+                          <span
+                            className={`font-semibold ${g.funding_gap > 0 ? "text-red-600" : "text-emerald-600"}`}
+                          >
+                            {fmt(g.funding_gap)}
+                          </span>
+                        </p>
+                      )}
+                      {g.risk_level && (
+                        <p>
+                          Risk:{" "}
+                          <span className="text-slate-800 font-semibold capitalize">
+                            {g.risk_level}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-400 text-sm text-center py-6">
+                No financial goals yet. Add goals in your profile to see
+                feasibility analysis.
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/*  SECTION 5: Portfolio Alignment                                 */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-5 px-1">
+            <div className="h-9 w-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+              <span className="material-symbols-outlined text-indigo-600 text-lg">
+                pie_chart
+              </span>
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">
+              Portfolio Alignment
+            </h2>
+          </div>
+          <div className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+            {portfolioLoading ? (
+              <SectionLoader />
+            ) : portfolioError ? (
+              <SectionError message={portfolioError} onRetry={fetchPortfolio} />
+            ) : portfolio ? (
+              <div>
+                {portfolio.risk_profile && (
+                  <div className="flex items-center gap-4 mb-5">
+                    <span className="text-xs font-bold text-slate-400 uppercase">
+                      Risk Profile:
                     </span>
-                    .
-                  </p>
-                </div>
-              </li>
-              <li className="flex items-start gap-5 p-4 rounded-xl hover:bg-emerald-50 transition-colors">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                  <span className="material-symbols-outlined text-lg">
-                    trending_up
-                  </span>
-                </div>
-                <div>
-                  <p className="text-base font-bold text-slate-900">
-                    Increase 401(k) contribution by 1%
-                  </p>
-                  <p className="text-sm text-slate-500 mt-1 leading-relaxed">
-                    You are currently below the employer match threshold.
-                    Optimizing this will improve your long-term savings score
-                    significantly.
-                  </p>
-                </div>
-              </li>
-              <li className="flex items-start gap-5 p-4 rounded-xl hover:bg-emerald-50 transition-colors">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                  <span className="material-symbols-outlined text-lg">
-                    calendar_month
-                  </span>
-                </div>
-                <div>
-                  <p className="text-base font-bold text-slate-900">
-                    Review monthly subscriptions
-                  </p>
-                  <p className="text-sm text-slate-500 mt-1 leading-relaxed">
-                    Our AI identified $42/mo in recurring charges that haven't
-                    been utilized in 90 days. Canceling these will boost net
-                    cash flow.
-                  </p>
-                </div>
-              </li>
-            </ul>
-            <div className="mt-8 pt-8 border-t border-emerald-100">
-              <button
-                onClick={calculateScore}
-                disabled={isCalculating}
-                className="w-full rounded-xl flex items-center justify-center gap-2 bg-emerald-500 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-600 transition-all disabled:opacity-75 disabled:cursor-not-allowed shadow-md shadow-emerald-100"
-              >
-                {isCalculating ? (
-                  <>
-                    <span className="animate-spin material-symbols-outlined text-sm">
-                      progress_activity
+                    <span className="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold capitalize">
+                      {portfolio.risk_profile}
                     </span>
-                    Refreshing Analysis...
-                  </>
-                ) : (
-                  "Refresh Analysis"
+                    {portfolio.alignment_status && (
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-bold ${
+                          portfolio.alignment_status === "aligned"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {portfolio.alignment_status === "aligned"
+                          ? "✓ Aligned"
+                          : "⚠ Misaligned"}
+                      </span>
+                    )}
+                  </div>
                 )}
-              </button>
+                {portfolio.actual_allocation && (
+                  <div className="mb-4">
+                    <p className="text-xs font-bold text-slate-400 uppercase mb-3">
+                      Actual Allocation
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(portfolio.actual_allocation).map(
+                        ([type, val]) => (
+                          <span
+                            key={type}
+                            className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-semibold text-slate-700"
+                          >
+                            {type.replace(/_/g, " ")}:{" "}
+                            <span className="text-indigo-600">{pct(val)}</span>
+                          </span>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                )}
+                {portfolio.recommendations &&
+                  portfolio.recommendations.length > 0 && (
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase mb-3">
+                        Recommendations
+                      </p>
+                      <ul className="space-y-2">
+                        {portfolio.recommendations.map((rec, i) => (
+                          <li
+                            key={i}
+                            className="flex items-start gap-2 text-sm text-slate-600"
+                          >
+                            <span className="material-symbols-outlined text-indigo-400 text-sm mt-0.5">
+                              lightbulb
+                            </span>
+                            {rec}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+              </div>
+            ) : (
+              <p className="text-slate-400 text-sm text-center py-6">
+                No portfolio data available
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/*  SECTION 6: Stress Test Simulation                              */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-5 px-1">
+            <div className="h-9 w-9 rounded-lg bg-orange-100 flex items-center justify-center">
+              <span className="material-symbols-outlined text-orange-600 text-lg">
+                warning
+              </span>
             </div>
+            <h2 className="text-xl font-bold text-slate-900">
+              Stress Test Simulation
+            </h2>
+          </div>
+          <div className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+            {stressLoading ? (
+              <SectionLoader />
+            ) : stressError ? (
+              <SectionError message={stressError} onRetry={fetchStress} />
+            ) : stress && typeof stress === "object" ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {Object.entries(stress).map(([scenario, details]) => {
+                  const icons = {
+                    recession: "trending_down",
+                    job_loss: "work_off",
+                    rate_hike: "trending_up",
+                  };
+                  const colors = {
+                    recession: "red",
+                    job_loss: "orange",
+                    rate_hike: "amber",
+                  };
+                  const c = colors[scenario] || "slate";
+                  return (
+                    <div
+                      key={scenario}
+                      className={`p-5 rounded-xl border border-${c}-100 bg-${c}-50/30`}
+                    >
+                      <div className="flex items-center gap-2 mb-4">
+                        <span
+                          className={`material-symbols-outlined text-${c}-600`}
+                        >
+                          {icons[scenario] || "science"}
+                        </span>
+                        <h4 className="text-sm font-bold text-slate-900 capitalize">
+                          {scenario.replace(/_/g, " ")}
+                        </h4>
+                      </div>
+                      {typeof details === "object" &&
+                      details !== null &&
+                      !Array.isArray(details) ? (
+                        <div className="space-y-2 text-xs text-slate-600">
+                          {Object.entries(details).map(([key, val]) => (
+                            <div
+                              key={key}
+                              className="flex justify-between items-center"
+                            >
+                              <span className="text-slate-500 capitalize">
+                                {key.replace(/_/g, " ")}
+                              </span>
+                              <span className="font-bold text-slate-800">
+                                {typeof val === "number"
+                                  ? val > 1000
+                                    ? fmt(val)
+                                    : pct(val)
+                                  : String(val)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-500">
+                          {JSON.stringify(details)}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-slate-400 text-sm text-center py-6">
+                No stress test data available
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ── CTA: Ask AI ── */}
+        <div className="mb-6">
+          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-green-50 p-8 shadow-sm text-center">
+            <span className="material-symbols-outlined text-4xl text-emerald-500 mb-3">
+              smart_toy
+            </span>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              Have Questions About Your Finances?
+            </h3>
+            <p className="text-slate-500 text-sm mb-5 max-w-md mx-auto">
+              Our AI advisor has access to your complete financial profile and
+              can provide personalized insights and recommendations.
+            </p>
+            <Link
+              to="/chatbot"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-md shadow-emerald-200 hover:shadow-lg transition-all hover:-translate-y-0.5"
+            >
+              <span className="material-symbols-outlined text-lg">chat</span>
+              Start a Conversation
+            </Link>
           </div>
         </div>
       </main>

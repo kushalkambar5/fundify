@@ -9,6 +9,7 @@ import Signup3 from "./pages/Signup3";
 import LegalPrivacy from "./pages/LegalPrivacy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import Profile from "./pages/Profile";
+import ChatBot from "./pages/ChatBot";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
@@ -36,6 +37,7 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/chatbot" element={<ChatBot />} />
             </Route>
 
             {/* If authenticated but missing onboarding details, ProtectedRoute redirects here */}

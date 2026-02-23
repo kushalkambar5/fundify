@@ -44,8 +44,7 @@ export const healthCheck = handleAsync(async (req, res, next) => {
 
 // ─── 2. POST /api/v1/rag/ask ──────────────────────────────────────────────────
 export const ragAsk = handleAsync(async (req, res, next) => {
-  const { query } = req.body;
-  const history = []; // RAG endpoints use their own session history, not the compressed user history
+  const { query, history = [] } = req.body;
   if (!query) return next(new HandleError("query is required", 400));
 
   const result = await forwardPost("/api/v1/rag/ask", { query, history }, next);
@@ -54,8 +53,7 @@ export const ragAsk = handleAsync(async (req, res, next) => {
 
 // ─── 3. POST /api/v1/rag/retrieve ─────────────────────────────────────────────
 export const ragRetrieve = handleAsync(async (req, res, next) => {
-  const { query } = req.body;
-  const history = []; // RAG endpoints use their own session history, not the compressed user history
+  const { query, history = [] } = req.body;
   if (!query) return next(new HandleError("query is required", 400));
 
   const result = await forwardPost(
@@ -75,6 +73,7 @@ export const financialHealthScore = handleAsync(async (req, res, next) => {
     const assetDetails = await Asset.find({ user: req.user._id });
     const liabilityDetails = await Liability.find({ user: req.user._id });
     const insuranceDetails = await Insurance.find({ user: req.user._id });
+    const goalDetails = await FinancialGoal.find({ user: req.user._id });
 
     if (!userDetails) return next(new HandleError("User not found", 404));
 
@@ -95,29 +94,56 @@ export const financialHealthScore = handleAsync(async (req, res, next) => {
     };
 
     const incomes = (incomeDetails || []).map((income) => ({
+      sourceType: income.sourceType,
       monthlyAmount: income.monthlyAmount,
+      growthRate: income.growthRate,
       isActive: income.isActive,
     }));
 
     const expenses = (expenseDetails || []).map((expense) => ({
+      category: expense.category,
       monthlyAmount: expense.monthlyAmount,
+      type: expense.type,
     }));
 
     const assets = (assetDetails || []).map((asset) => ({
       type: asset.type,
+      name: asset.name,
       currentValue: asset.currentValue,
+      investedAmount: asset.investedAmount,
+      expectedReturnRate: asset.expectedReturnRate,
       liquidityLevel: asset.liquidityLevel,
     }));
 
     const liabilities = (liabilityDetails || []).map((liability) => ({
-      emiAmount: liability.emiAmount,
       type: liability.type,
+      principalAmount: liability.principalAmount,
+      outstandingAmount: liability.outstandingAmount,
       interestRate: liability.interestRate || 0,
+      emiAmount: liability.emiAmount,
+      tenureRemaining: liability.tenureRemaining,
     }));
 
     const insurances = (insuranceDetails || []).map((insurance) => ({
       type: insurance.type,
+      provider: insurance.provider,
       coverageAmount: insurance.coverageAmount,
+      premiumAmount: insurance.premiumAmount,
+      maturityDate: insurance.maturityDate
+        ? new Date(insurance.maturityDate).toISOString().split("T")[0]
+        : null,
+    }));
+
+    const financialGoals = (goalDetails || []).map((goal) => ({
+      goalType: goal.goalType,
+      targetAmount: goal.targetAmount,
+      targetDate: goal.targetDate
+        ? new Date(goal.targetDate).toISOString().split("T")[0]
+        : null,
+      priorityLevel: goal.priorityLevel,
+      inflationRate: goal.inflationRate,
+      currentSavingsForGoal: goal.currentSavingsForGoal,
+      status: goal.status,
     }));
 
     const result = await forwardPost(
@@ -129,6 +155,7 @@ export const financialHealthScore = handleAsync(async (req, res, next) => {
         assets,
         liabilities,
         insurances,
+        financialGoals,
       },
       next,
     );
@@ -223,7 +250,9 @@ export const goalFeasibility = handleAsync(async (req, res, next) => {
     const financial_goals = (financialGoalDetails || []).map((goal) => ({
       goal_type: goal.goalType,
       target_amount: goal.targetAmount,
-      target_date: goal.targetDate,
+      target_date: goal.targetDate
+        ? new Date(goal.targetDate).toISOString().split("T")[0]
+        : null,
       priority_level: goal.priorityLevel,
       inflation_rate: goal.inflationRate,
       current_savings_for_goal: goal.currentSavingsForGoal,
@@ -234,7 +263,6 @@ export const goalFeasibility = handleAsync(async (req, res, next) => {
       "/api/v1/analytics/goal-feasibility",
       {
         user_id: req.user._id.toString(),
-        annual_income: userDetails.annualIncome,
         incomes,
         expenses,
         financial_goals,
@@ -269,7 +297,6 @@ export const portfolioAlignment = handleAsync(async (req, res, next) => {
       {
         user_id: req.user._id.toString(),
         risk_profile: userDetails.riskProfile,
-        annual_income: userDetails.annualIncome,
         assets,
       },
       next,
@@ -402,7 +429,9 @@ export const userBasedRetrieval = handleAsync(async (req, res, next) => {
     const financial_goal = (goalDetails || []).map((goal) => ({
       goal_type: goal.goalType,
       target_amount: goal.targetAmount,
-      target_date: goal.targetDate,
+      target_date: goal.targetDate
+        ? new Date(goal.targetDate).toISOString().split("T")[0]
+        : null,
       priority_level: goal.priorityLevel,
       inflation_rate: goal.inflationRate,
       current_savings_for_goal: goal.currentSavingsForGoal,
@@ -414,7 +443,9 @@ export const userBasedRetrieval = handleAsync(async (req, res, next) => {
       provider: ins.provider,
       coverage_amount: ins.coverageAmount,
       premium_amount: ins.premiumAmount,
-      maturity_date: ins.maturityDate,
+      maturity_date: ins.maturityDate
+        ? new Date(ins.maturityDate).toISOString().split("T")[0]
+        : null,
     }));
 
     const history = req.user.history ? req.user.history : undefined;
@@ -443,7 +474,15 @@ export const userBasedRetrieval = handleAsync(async (req, res, next) => {
       payload,
       next,
     );
-    if (result) res.status(200).json(result);
+    if (result) {
+      // Persist compressed history for future conversational context
+      if (result.history) {
+        await User.findByIdAndUpdate(req.user._id, {
+          history: result.history,
+        });
+      }
+      res.status(200).json(result);
+    }
   } catch (err) {
     return next(new HandleError(err.message, 500));
   }

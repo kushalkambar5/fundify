@@ -19,13 +19,15 @@ import Insurance from "../models/insuranceModel.js";
 export const verifyEmail = handleAsync(async (req, res, next) => {
   const { email } = req.body;
   if (!email) {
-    return next(handleError(400, "Email is required"));
+    return next(new handleError(400, "Email is required"));
   }
 
   // Prevent re-registration with an existing account
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    return next(handleError(409, "An account with this email already exists"));
+    return next(
+      new handleError(409, "An account with this email already exists"),
+    );
   }
 
   // Generate OTP
@@ -57,7 +59,7 @@ export const verifyEmail = handleAsync(async (req, res, next) => {
     });
   } catch (err) {
     await TempUser.deleteOne({ email });
-    return next(handleError(500, "Failed to send OTP. Please try again."));
+    return next(new handleError(500, "Failed to send OTP. Please try again."));
   }
 
   res.status(200).json({
@@ -71,7 +73,7 @@ export const verifyEmail = handleAsync(async (req, res, next) => {
 export const verifyOtp = handleAsync(async (req, res, next) => {
   const { email, otp } = req.body;
   if (!email || !otp) {
-    return next(handleError(400, "Email and OTP are required"));
+    return next(new handleError(400, "Email and OTP are required"));
   }
 
   const tempUser = await TempUser.findOne({ email });
@@ -86,11 +88,13 @@ export const verifyOtp = handleAsync(async (req, res, next) => {
 
   if (tempUser.otpExpire < Date.now()) {
     await TempUser.deleteOne({ email });
-    return next(handleError(400, "OTP has expired. Please request a new one."));
+    return next(
+      new handleError(400, "OTP has expired. Please request a new one."),
+    );
   }
 
   if (tempUser.otpCode !== otp.toString()) {
-    return next(handleError(400, "Invalid OTP. Please try again."));
+    return next(new handleError(400, "Invalid OTP. Please try again."));
   }
 
   // Mark as verified — user can now complete registration
@@ -143,7 +147,7 @@ export const registerUser = handleAsync(async (req, res, next) => {
     !annualIncome ||
     !riskProfile
   ) {
-    return next(handleError(400, "All fields are required"));
+    return next(new handleError(400, "All fields are required"));
   }
 
   // Guard: email must be OTP-verified first
@@ -192,17 +196,17 @@ export const registerUser = handleAsync(async (req, res, next) => {
 export const loginUser = handleAsync(async (req, res, next) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return next(handleError(400, "All fields are required"));
+    return next(new handleError(400, "All fields are required"));
   }
 
   const user = await User.findOne({ email }).select("+passwordHash");
   if (!user) {
-    return next(handleError(401, "Invalid email or password"));
+    return next(new handleError(401, "Invalid email or password"));
   }
 
   const isPasswordValid = await user.comparePassword(password);
   if (!isPasswordValid) {
-    return next(handleError(401, "Invalid email or password"));
+    return next(new handleError(401, "Invalid email or password"));
   }
 
   const hasAssets = await Asset.findOne({ user: user._id });
@@ -249,7 +253,7 @@ export const logoutUser = handleAsync(async (req, res, next) => {
 export const getUserProfile = handleAsync(async (req, res, next) => {
   const user = await User.findById(req.user.id);
   if (!user) {
-    return next(handleError(404, "User not found"));
+    return next(new handleError(404, "User not found"));
   }
   res.status(200).json({ success: true, user });
 });
@@ -259,7 +263,7 @@ export const getUserProfile = handleAsync(async (req, res, next) => {
 export const forgotPasswordSendOtp = handleAsync(async (req, res, next) => {
   const { email } = req.body;
   if (!email) {
-    return next(handleError(400, "Email is required"));
+    return next(new handleError(400, "Email is required"));
   }
 
   const user = await User.findOne({ email });
@@ -299,7 +303,7 @@ export const forgotPasswordSendOtp = handleAsync(async (req, res, next) => {
     });
   } catch (err) {
     await TempUser.deleteOne({ email });
-    return next(handleError(500, "Failed to send OTP. Please try again."));
+    return next(new handleError(500, "Failed to send OTP. Please try again."));
   }
 
   res.status(200).json({
@@ -313,7 +317,7 @@ export const forgotPasswordSendOtp = handleAsync(async (req, res, next) => {
 export const forgotPasswordVerifyOtp = handleAsync(async (req, res, next) => {
   const { email, otp } = req.body;
   if (!email || !otp) {
-    return next(handleError(400, "Email and OTP are required"));
+    return next(new handleError(400, "Email and OTP are required"));
   }
 
   const tempUser = await TempUser.findOne({ email, purpose: "passwordReset" });
@@ -328,11 +332,13 @@ export const forgotPasswordVerifyOtp = handleAsync(async (req, res, next) => {
 
   if (tempUser.otpExpire < Date.now()) {
     await TempUser.deleteOne({ email });
-    return next(handleError(400, "OTP has expired. Please request a new one."));
+    return next(
+      new handleError(400, "OTP has expired. Please request a new one."),
+    );
   }
 
   if (tempUser.otpCode !== otp.toString()) {
-    return next(handleError(400, "Invalid OTP. Please try again."));
+    return next(new handleError(400, "Invalid OTP. Please try again."));
   }
 
   // Mark as verified — user can now submit the new password
@@ -350,15 +356,15 @@ export const forgotPasswordVerifyOtp = handleAsync(async (req, res, next) => {
 export const resetPassword = handleAsync(async (req, res, next) => {
   const { email, password, confirmPassword } = req.body;
   if (!email || !password || !confirmPassword) {
-    return next(handleError(400, "All fields are required"));
+    return next(new handleError(400, "All fields are required"));
   }
 
   if (password !== confirmPassword) {
-    return next(handleError(400, "Passwords do not match"));
+    return next(new handleError(400, "Passwords do not match"));
   }
 
   if (password.length < 8) {
-    return next(handleError(400, "Password must be at least 8 characters"));
+    return next(new handleError(400, "Password must be at least 8 characters"));
   }
 
   const tempUser = await TempUser.findOne({ email, purpose: "passwordReset" });
@@ -370,7 +376,7 @@ export const resetPassword = handleAsync(async (req, res, next) => {
 
   const user = await User.findOne({ email });
   if (!user) {
-    return next(handleError(404, "User not found"));
+    return next(new handleError(404, "User not found"));
   }
 
   // Assigning to passwordHash triggers the pre-save bcrypt hook
@@ -392,15 +398,17 @@ export const resetPassword = handleAsync(async (req, res, next) => {
 export const changePassword = handleAsync(async (req, res, next) => {
   const { currentPassword, newPassword, confirmNewPassword } = req.body;
   if (!currentPassword || !newPassword || !confirmNewPassword) {
-    return next(handleError(400, "All fields are required"));
+    return next(new handleError(400, "All fields are required"));
   }
 
   if (newPassword !== confirmNewPassword) {
-    return next(handleError(400, "New passwords do not match"));
+    return next(new handleError(400, "New passwords do not match"));
   }
 
   if (newPassword.length < 8) {
-    return next(handleError(400, "New password must be at least 8 characters"));
+    return next(
+      new handleError(400, "New password must be at least 8 characters"),
+    );
   }
 
   if (currentPassword === newPassword) {
@@ -414,12 +422,12 @@ export const changePassword = handleAsync(async (req, res, next) => {
 
   const user = await User.findById(req.user.id).select("+passwordHash");
   if (!user) {
-    return next(handleError(404, "User not found"));
+    return next(new handleError(404, "User not found"));
   }
 
   const isPasswordValid = await user.comparePassword(currentPassword);
   if (!isPasswordValid) {
-    return next(handleError(401, "Current password is incorrect"));
+    return next(new handleError(401, "Current password is incorrect"));
   }
 
   // Assigning to passwordHash triggers the pre-save bcrypt hook
