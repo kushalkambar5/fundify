@@ -15,7 +15,12 @@ export const verifyUserAuth = handleAsyncError(async (req, res, next) => {
       ),
     );
   }
-  const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+  let decodedData;
+  try {
+    decodedData = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (error) {
+    return next(new HandleError(401, "Invalid or expired token"));
+  }
   const user = await User.findById(decodedData.id);
   if (!user) {
     return next(new HandleError(404, "User not found"));

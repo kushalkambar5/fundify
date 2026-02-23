@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import AuthOnboardingHeader from "../components/auth/AuthOnboardingHeader";
 import SectionCard from "../components/signup/SectionCard";
 import {
@@ -175,7 +176,7 @@ function Signup3({ emailId, password }) {
           );
         }
       } catch (err) {
-        console.error("Error loading user financial data:", err);
+        toast.error("Error loading user financial data");
       }
     };
     loadUserData();
@@ -296,7 +297,7 @@ function Signup3({ emailId, password }) {
       try {
         await deleteIncome(inc._id);
       } catch (err) {
-        console.error("Failed to delete income", err);
+        toast.error("Failed to delete income");
       }
     }
     const newIncomes = [...incomes];
@@ -368,7 +369,7 @@ function Signup3({ emailId, password }) {
       try {
         await deleteExpense(exp._id);
       } catch (err) {
-        console.error("Failed to delete expense", err);
+        toast.error("Failed to delete expense");
       }
     }
     const newExp = [...expenses];
@@ -454,7 +455,7 @@ function Signup3({ emailId, password }) {
       try {
         await deleteAsset(a._id);
       } catch (err) {
-        console.error("Failed to delete asset", err);
+        toast.error("Failed to delete asset");
       }
     }
     const newAssets = [...assets];
@@ -540,7 +541,7 @@ function Signup3({ emailId, password }) {
       try {
         await deleteLiability(l._id);
       } catch (err) {
-        console.error("Failed to delete liability", err);
+        toast.error("Failed to delete liability");
       }
     }
     const newLiab = [...liabilities];
@@ -627,7 +628,7 @@ function Signup3({ emailId, password }) {
       try {
         await deleteInsurance(i._id);
       } catch (err) {
-        console.error("Failed to delete insurance", err);
+        toast.error("Failed to delete insurance");
       }
     }
     const newIns = [...insurances];
@@ -718,7 +719,7 @@ function Signup3({ emailId, password }) {
       try {
         await deleteFinancialGoal(g._id);
       } catch (err) {
-        console.error("Failed to delete goal", err);
+        toast.error("Failed to delete goal");
       }
     }
     const newGoals = [...goals];

@@ -1,5 +1,6 @@
 import React from "react";
 import Landing from "./pages/Landing";
+import { Toaster } from "react-hot-toast";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
@@ -22,6 +23,7 @@ const RootRoute = () => {
 function App() {
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display transition-colors duration-300">
+      <Toaster position="top-right" />
       <AuthProvider>
         <BrowserRouter>
           <Routes>

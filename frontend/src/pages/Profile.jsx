@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import axios from "../services/axiosInstance";
 import { useAuth } from "../context/AuthContext";
 import DashboardNavbar from "../components/DashboardNavbar";
@@ -60,7 +61,7 @@ export default function Profile() {
         });
       }
     } catch (err) {
-      console.error("Failed to fetch profile", err);
+      toast.error("Failed to fetch profile");
       setError("Failed to load profile data.");
     } finally {
       setIsLoading(false);
@@ -93,7 +94,7 @@ export default function Profile() {
         setIsEditing(false);
       }
     } catch (err) {
-      console.error("Failed to update profile", err);
+      toast.error("Failed to update profile");
       setError(
         err.response?.data?.message || "Failed to update profile details.",
       );
@@ -188,7 +189,7 @@ export default function Profile() {
       await logout();
       navigate("/");
     } catch (err) {
-      console.error("Failed to logout", err);
+      toast.error("Failed to logout");
     }
   };
 

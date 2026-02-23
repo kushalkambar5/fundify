@@ -452,7 +452,7 @@ export const userBasedRetrieval = handleAsync(async (req, res, next) => {
 
     const latestScore = await FinancialHealthScore.findOne({
       user: req.user._id,
-    }).sort({ generatedAt: -1 });
+    }).sort({ createdAt: -1 });
 
     const payload = {
       query,
