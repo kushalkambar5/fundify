@@ -47,10 +47,10 @@ function CTA() {
             your 14-day free trial today. No credit card required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 mt-8">
-            <button className="bg-primary text-navy-deep px-10 py-5 rounded-xl font-bold text-lg hover:brightness-110 hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(13,242,185,0.4)]">
+            <button className="bg-primary text-navy-deep px-10 py-5 rounded-xl font-bold text-lg btn-hover-animate shadow-[0_0_20px_rgba(13,242,185,0.4)]">
               Get Started with Fundify
             </button>
-            <button className="text-white border border-white/20 px-10 py-5 rounded-xl font-bold text-lg hover:bg-white/10 backdrop-blur-sm transition-all">
+            <button className="text-white border border-white/20 px-10 py-5 rounded-xl font-bold text-lg btn-hover-animate backdrop-blur-sm">
               Contact Fundify Sales
             </button>
           </div>

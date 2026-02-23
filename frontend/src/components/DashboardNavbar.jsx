@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { CircleUserRound } from "lucide-react";
+import profileImg from "../assets/profile.png";
 import logo from "../assets/logo.png";
 
 export default function DashboardNavbar() {
@@ -45,7 +45,7 @@ export default function DashboardNavbar() {
                     isActive
                       ? "bg-emerald-500 text-white shadow-sm shadow-emerald-200"
                       : "text-slate-600 hover:text-emerald-700 hover:bg-emerald-100"
-                  }
+                  } btn-hover-animate
                 `}
               >
                 {item.label}
@@ -55,11 +55,16 @@ export default function DashboardNavbar() {
         </nav>
 
         {/* Right: Profile Icon */}
-        <Link to="/profile" className="group relative" title="Go to Profile">
-          <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-emerald-200 group-hover:ring-emerald-400 transition-all duration-200 group-hover:scale-105 flex items-center justify-center bg-emerald-50">
-            <CircleUserRound
-              className="h-6 w-6 text-emerald-600"
-              strokeWidth={1.5}
+        <Link
+          to="/profile"
+          className="group relative btn-hover-animate hover:-translate-y-1"
+          title="Go to Profile"
+        >
+          <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-emerald-200 group-hover:ring-emerald-400 transition-all duration-200 flex items-center justify-center bg-emerald-50">
+            <img
+              src={profileImg}
+              alt="Profile"
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
             />
           </div>
           <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-white" />

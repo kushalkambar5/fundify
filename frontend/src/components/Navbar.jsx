@@ -55,7 +55,7 @@ function Navbar() {
           </Link>
           <Link
             to="/signup"
-            className="flex items-center justify-center bg-gradient-to-r from-primary to-emerald-400 text-navy-deep px-6 py-2.5 rounded-xl text-sm font-bold tracking-tight shadow-[0_0_15px_rgba(13,242,185,0.4)] hover:shadow-[0_0_25px_rgba(13,242,185,0.6)] hover:scale-105 transition-all active:scale-95"
+            className="flex items-center justify-center bg-gradient-to-r from-primary to-emerald-400 text-navy-deep px-6 py-2.5 rounded-xl text-sm font-bold tracking-tight shadow-[0_0_15px_rgba(13,242,185,0.4)] btn-hover-animate hover:shadow-[0_0_25px_rgba(13,242,185,0.6)]"
           >
             Get Started
           </Link>

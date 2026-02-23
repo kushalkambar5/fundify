@@ -60,6 +60,15 @@
       radial-gradient(closest-side, white 79%, transparent 80% 100%),
       conic-gradient(#059669 var(--progress), #d1fae5 0);
   }
+
+  /* Extracted animation classes for interactive buttons */
+  .btn-hover-animate {
+    @apply transition-all duration-300 hover:opacity-90 hover:-translate-y-0.5;
+  }
+
+  .btn-icon-animate {
+    @apply transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-1;
+  }
 }
 
 /* ── Chat animations ─────────────────────────────────────────────────── */

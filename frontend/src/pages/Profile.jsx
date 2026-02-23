@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "../services/axiosInstance";
 import { useAuth } from "../context/AuthContext";
 import DashboardNavbar from "../components/DashboardNavbar";
-import { CircleUserRound } from "lucide-react";
+import profileImg from "../assets/profile.png";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -204,9 +204,10 @@ export default function Profile() {
           <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
             <div className="relative group">
               <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-white shadow-lg bg-emerald-50 flex items-center justify-center">
-                <CircleUserRound
-                  className="h-16 w-16 text-emerald-600"
-                  strokeWidth={1.5}
+                <img
+                  src={profileImg}
+                  alt="User Avatar"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white rounded-full p-2 border-4 border-white shadow-sm flex items-center justify-center">
@@ -234,9 +235,9 @@ export default function Profile() {
                   {!isEditing ? (
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-200 hover:-translate-y-0.5"
+                      className="group flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-emerald-600 shadow-sm shadow-emerald-200 hover:shadow-lg hover:shadow-emerald-300 btn-hover-animate"
                     >
-                      <span className="material-symbols-outlined text-sm">
+                      <span className="material-symbols-outlined text-sm btn-icon-animate">
                         edit
                       </span>
                       Edit Profile
@@ -248,21 +249,21 @@ export default function Profile() {
                           setIsEditing(false);
                           fetchProfile(); // Reset fields
                         }}
-                        className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900"
+                        className="group flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 btn-hover-animate"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="group flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-emerald-600 shadow-sm shadow-emerald-200 hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed btn-hover-animate"
                       >
                         {isSaving ? (
-                          <span className="material-symbols-outlined text-sm animate-spin">
+                          <span className="material-symbols-outlined text-sm animate-spin btn-icon-animate">
                             sync
                           </span>
                         ) : (
-                          <span className="material-symbols-outlined text-sm">
+                          <span className="material-symbols-outlined text-sm btn-icon-animate">
                             save
                           </span>
                         )}

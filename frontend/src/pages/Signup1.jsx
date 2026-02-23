@@ -211,7 +211,7 @@ function Signup1({ onNext }) {
                   password !== confirmPassword ||
                   loading
                     ? "bg-emerald-300 shadow-none cursor-not-allowed"
-                    : "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200 hover:shadow-lg hover:-translate-y-0.5"
+                    : "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200 btn-hover-animate"
                 }`}
                 type="submit"
                 disabled={
@@ -226,7 +226,7 @@ function Signup1({ onNext }) {
                 ) : (
                   <>
                     <span>Send OTP</span>
-                    <span className="material-symbols-outlined text-[20px] group-hover:translate-x-0.5 transition-transform">
+                    <span className="material-symbols-outlined text-[20px] btn-icon-animate">
                       arrow_forward
                     </span>
                   </>

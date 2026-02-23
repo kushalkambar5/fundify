@@ -1,9 +1,58 @@
 import React, { useState, useRef, useEffect } from "react";
 import DashboardNavbar from "../components/DashboardNavbar";
 import { askChatbot } from "../services/modelServices";
-import { CircleUserRound } from "lucide-react";
+import profileImg from "../assets/profile.png";
 import chatbot from "../assets/chatbot.png";
 import logo from "../assets/logo.png";
+
+const formatMessage = (text) => {
+  if (!text) return "";
+  let formatted = text.replace(/\[CHUNK \d+\]/g, "");
+  formatted = formatted.replace(/\[\s*\]/g, "");
+  formatted = formatted.replace(
+    /\[(?:SOURCE|CONTEXT|REF|DOC|RETRIEVED)[^\]]*\]/gi,
+    "",
+  );
+  formatted = formatted.replace(
+    /(\*?\*?)(Based on |From |Using |Referring to )?(the )?(previous |prior |earlier |past )?(context|conversation|history|chat)(:|\.)?(\*?\*?)\s*/gi,
+    "",
+  );
+  formatted = formatted.replace(/\*?\*?Previous Context:?\*?\*?\s*/gi, "");
+  // Bold
+  formatted = formatted.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  // Italic
+  formatted = formatted.replace(/\*(.+?)\*/g, "<em>$1</em>");
+  // Line breaks
+  formatted = formatted.replace(/\n/g, "<br/>");
+  // Lists
+  formatted = formatted.replace(
+    /^- (.+)/gm,
+    '<span class="flex items-start gap-2 mt-1"><span class="text-emerald-500 mt-0.5">&bull;</span><span>$1</span></span>',
+  );
+  return formatted;
+};
+
+const TypewriterMessage = ({ content, scroll }) => {
+  const [displayed, setDisplayed] = useState("");
+
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      setDisplayed(content.slice(0, i + 1));
+      i++;
+      if (i >= content.length) {
+        clearInterval(interval);
+      }
+    }, 15);
+    return () => clearInterval(interval);
+  }, [content]);
+
+  useEffect(() => {
+    if (scroll) scroll();
+  }, [displayed, scroll]);
+
+  return <div dangerouslySetInnerHTML={{ __html: formatMessage(displayed) }} />;
+};
 
 export default function ChatBot() {
   const [messages, setMessages] = useState([
@@ -26,33 +75,6 @@ export default function ChatBot() {
     scrollToBottom();
   }, [messages]);
 
-  const formatMessage = (text) => {
-    if (!text) return "";
-    let formatted = text.replace(/\[CHUNK \d+\]/g, "");
-    formatted = formatted.replace(/\[\s*\]/g, "");
-    formatted = formatted.replace(
-      /\[(?:SOURCE|CONTEXT|REF|DOC|RETRIEVED)[^\]]*\]/gi,
-      "",
-    );
-    formatted = formatted.replace(
-      /(\*?\*?)(Based on |From |Using |Referring to )?(the )?(previous |prior |earlier |past )?(context|conversation|history|chat)(:|\.)?(\*?\*?)\s*/gi,
-      "",
-    );
-    formatted = formatted.replace(/\*?\*?Previous Context:?\*?\*?\s*/gi, "");
-    // Bold
-    formatted = formatted.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-    // Italic
-    formatted = formatted.replace(/\*(.+?)\*/g, "<em>$1</em>");
-    // Line breaks
-    formatted = formatted.replace(/\n/g, "<br/>");
-    // Lists
-    formatted = formatted.replace(
-      /^- (.+)/gm,
-      '<span class="flex items-start gap-2 mt-1"><span class="text-emerald-500 mt-0.5">&bull;</span><span>$1</span></span>',
-    );
-    return formatted;
-  };
-
   const handleSend = async () => {
     const query = input.trim();
     if (!query || isLoading) return;
@@ -65,11 +87,12 @@ export default function ChatBot() {
     try {
       const data = await askChatbot(query);
       setMessages((prev) => [
-        ...prev,
+        ...prev.map((m) => ({ ...m, isNew: false })),
         {
           role: "assistant",
           content:
             data.answer || "I couldn't generate a response. Please try again.",
+          isNew: true,
         },
       ]);
     } catch (err) {
@@ -192,18 +215,29 @@ export default function ChatBot() {
                         ? "bg-red-50 text-red-700 border border-red-100 rounded-bl-md"
                         : "bg-emerald-50/80 text-slate-700 border border-emerald-100 rounded-bl-md"
                   }`}
-                  dangerouslySetInnerHTML={{
-                    __html: formatMessage(msg.content),
-                  }}
-                />
+                >
+                  {msg.role === "assistant" && msg.isNew ? (
+                    <TypewriterMessage
+                      content={msg.content}
+                      scroll={scrollToBottom}
+                    />
+                  ) : (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: formatMessage(msg.content),
+                      }}
+                    />
+                  )}
+                </div>
               </div>
 
               {/* User Avatar */}
               {msg.role === "user" && (
-                <div className="h-9 w-9 rounded-full bg-slate-700 flex items-center justify-center ml-3 mt-6 shrink-0 shadow-sm">
-                  <CircleUserRound
-                    className="h-5 w-5 text-white"
-                    strokeWidth={1.5}
+                <div className="h-9 w-9 rounded-full overflow-hidden bg-slate-700 flex items-center justify-center ml-3 mt-6 shrink-0 shadow-sm">
+                  <img
+                    src={profileImg}
+                    alt="User"
+                    className="w-full h-full object-cover"
                   />
                 </div>
               )}
@@ -258,9 +292,9 @@ export default function ChatBot() {
             <button
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
-              className="h-10 w-10 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center transition-all shadow-md shadow-emerald-200 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-emerald-500 shrink-0"
+              className="group h-10 w-10 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center transition-all shadow-md shadow-emerald-200 btn-hover-animate disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-emerald-500 shrink-0"
             >
-              <span className="material-symbols-outlined text-lg">
+              <span className="material-symbols-outlined text-lg btn-icon-animate group-hover:-translate-y-0 relative">
                 {isLoading ? "hourglass_top" : "send"}
               </span>
             </button>

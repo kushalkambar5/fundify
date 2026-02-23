@@ -9,6 +9,7 @@ import {
   getStressTest,
 } from "../services/modelServices";
 import DashboardNavbar from "../components/DashboardNavbar";
+import chatbot from "../assets/chatbot.png";
 
 /* ─── Helpers ──────────────────────────────────────────────────────────── */
 const fmt = (n) =>
@@ -457,12 +458,12 @@ export default function Dashboard() {
               <button
                 onClick={doCalculateScore}
                 disabled={isCalculating}
-                className="relative overflow-hidden w-full group rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 py-4 transition-all duration-300 shadow-lg shadow-emerald-200 hover:shadow-xl hover:shadow-emerald-300 disabled:opacity-75 disabled:cursor-not-allowed hover:-translate-y-0.5"
+                className="relative overflow-hidden w-full group rounded-2xl bg-emerald-500 text-white font-bold px-8 py-4 transition-all duration-300 shadow-lg shadow-emerald-200 hover:shadow-xl hover:shadow-emerald-300 disabled:opacity-75 disabled:cursor-not-allowed btn-hover-animate"
               >
                 <div className="relative flex items-center justify-center gap-3">
                   {isCalculating ? (
                     <>
-                      <span className="animate-spin material-symbols-outlined text-[20px]">
+                      <span className="animate-spin material-symbols-outlined text-[20px] btn-icon-animate">
                         refresh
                       </span>
                       <span>Analyzing Profile...</span>
@@ -470,7 +471,7 @@ export default function Dashboard() {
                   ) : (
                     <>
                       <span>Calculate Financial Health Score</span>
-                      <span className="material-symbols-outlined text-[20px] transition-transform group-hover:translate-x-1">
+                      <span className="material-symbols-outlined text-[20px] btn-icon-animate">
                         arrow_forward
                       </span>
                     </>
@@ -506,10 +507,10 @@ export default function Dashboard() {
               <button
                 onClick={doCalculateScore}
                 disabled={isCalculating}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-md border border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-colors text-xs font-semibold disabled:opacity-50"
+                className="group flex items-center gap-1.5 px-3 py-1 rounded-md border border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:opacity-90 transition-all duration-300 hover:-translate-y-0.5 text-xs font-semibold disabled:opacity-50"
               >
                 <span
-                  className={`material-symbols-outlined text-sm ${isCalculating ? "animate-spin" : ""}`}
+                  className={`material-symbols-outlined text-sm transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-1 ${isCalculating ? "animate-spin" : ""}`}
                 >
                   refresh
                 </span>
@@ -521,20 +522,22 @@ export default function Dashboard() {
           <div className="flex gap-3">
             <Link
               to="/onboarding"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-emerald-300 text-emerald-700 font-bold text-sm hover:bg-emerald-50 transition-all hover:-translate-y-0.5"
+              className="group flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-emerald-300 text-emerald-700 font-bold text-sm hover:bg-emerald-50 hover:opacity-90 transition-all duration-300 hover:-translate-y-0.5"
             >
-              <span className="material-symbols-outlined text-lg">
+              <span className="material-symbols-outlined text-lg transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-1">
                 post_add
               </span>
               Add more Info
             </Link>
             <Link
               to="/chatbot"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-400 text-white font-bold text-sm shadow-md shadow-emerald-200 hover:shadow-lg transition-all hover:-translate-y-0.5"
+              className="group flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-400 text-white font-bold text-sm shadow-md shadow-emerald-200 hover:shadow-lg transition-all duration-300 hover:opacity-90 hover:-translate-y-0.5"
             >
-              <span className="material-symbols-outlined text-lg">
-                smart_toy
-              </span>
+              <img
+                src={chatbot}
+                alt="AI"
+                className="w-8 h-8 object-contain transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-1"
+              />
               Ask AI Advisor
             </Link>
           </div>
@@ -1000,9 +1003,13 @@ export default function Dashboard() {
             </p>
             <Link
               to="/chatbot"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-md shadow-emerald-200 hover:shadow-lg transition-all hover:-translate-y-0.5"
+              className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-md shadow-emerald-200 hover:shadow-lg transition-all duration-300 hover:opacity-90 hover:-translate-y-0.5"
             >
-              <span className="material-symbols-outlined text-lg">chat</span>
+              <img
+                src={chatbot}
+                alt="AI"
+                className="w-5 h-5 object-contain transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-1"
+              />
               Start a Conversation
             </Link>
           </div>

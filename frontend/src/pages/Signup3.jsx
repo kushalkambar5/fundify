@@ -892,11 +892,11 @@ function Signup3({ emailId, password }) {
                   navigate("/dashboard");
                 }}
                 disabled={!allSaved}
-                className={`font-bold py-2.5 px-6 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2 whitespace-nowrap ${
-                  allSaved
-                    ? "bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-700/20"
-                    : "bg-slate-200 text-slate-400 shadow-none cursor-not-allowed"
-                }`}
+                className={`relative overflow-hidden w-full group rounded-2xl font-bold px-8 py-4 transition-all duration-300 flex items-center justify-center gap-3 ${
+                  isDbAllSaved
+                    ? "bg-emerald-700 text-white shadow-emerald-700/20 btn-hover-animate"
+                    : "bg-emerald-500 text-white shadow-emerald-500/20 btn-hover-animate"
+                } disabled:opacity-75 disabled:cursor-not-allowed`}
               >
                 Finish Onboarding
                 <span className="material-symbols-outlined text-[18px]">
@@ -2038,14 +2038,14 @@ function Signup3({ emailId, password }) {
                   navigate("/dashboard");
                 }}
                 disabled={!allSaved}
-                className={`font-bold py-3 px-8 text-lg rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 whitespace-nowrap ${
+                className={`relative overflow-hidden w-full group rounded-2xl font-bold py-3 px-8 text-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${
                   allSaved
-                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/30 ring-4 ring-blue-600/10"
+                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/30 ring-4 ring-blue-600/10 btn-hover-animate"
                     : "bg-slate-200 text-slate-400 shadow-none cursor-not-allowed"
                 }`}
               >
                 Get Results
-                <span className="material-symbols-outlined text-[20px] font-bold">
+                <span className="material-symbols-outlined text-[20px] btn-icon-animate">
                   arrow_forward
                 </span>
               </button>

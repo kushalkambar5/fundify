@@ -174,10 +174,10 @@ function Signup2({ onNext, email }) {
 
             <div className="space-y-4">
               <button
-                className={`w-full text-white font-bold py-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 ${
+                className={`w-full text-white font-bold py-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group ${
                   !isOtpComplete || loading
                     ? "bg-emerald-300 shadow-none cursor-not-allowed"
-                    : "bg-emerald-500 hover:bg-emerald-600 hover:shadow-lg hover:-translate-y-0.5 shadow-emerald-200"
+                    : "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200 btn-hover-animate"
                 }`}
                 type="submit"
                 disabled={!isOtpComplete || loading}
@@ -187,7 +187,7 @@ function Signup2({ onNext, email }) {
                 ) : (
                   <>
                     <span>Verify & Continue</span>
-                    <span className="material-symbols-outlined text-lg">
+                    <span className="material-symbols-outlined text-lg btn-icon-animate">
                       arrow_forward
                     </span>
                   </>
