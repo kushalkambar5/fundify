@@ -14,10 +14,14 @@ import {
   postIncome,
   postInsurance,
   postLiability,
+  checkOnboardingStatus,
 } from "../controllers/userController.js";
 import { verifyUserAuth } from "../middlewares/userAuth.js";
 
 const router = express.Router();
+
+// Public / Semi-Public
+router.get("/onboarding-status/:email", checkOnboardingStatus);
 
 // Protected
 router.get("/me", verifyUserAuth, getUserProfile);

@@ -21,7 +21,6 @@ const expenseSchema = new mongoose.Schema(
         "entertainment",
         "rent",
         "emi",
-        "enterainment",
         "other",
       ],
     },

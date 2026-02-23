@@ -7,13 +7,39 @@ import Income from "../models/incomeModel.js";
 import Insurance from "../models/insuranceModel.js";
 import Liability from "../models/liabilityModel.js";
 
-// Get Assets
 export const getAssets = handleAsync(async (req, res, next) => {
   const assets = await Asset.find({ user: req.user.id });
   res.status(200).json({
     success: true,
     assets,
   });
+});
+
+// Check completely saved onboarding status explicitly from MongoDB
+export const checkOnboardingStatus = handleAsync(async (req, res, next) => {
+  const { email } = req.params;
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  const hasAssets = await Asset.findOne({ user: user._id });
+  const hasIncomes = await Income.findOne({ user: user._id });
+  const hasExpenses = await Expense.findOne({ user: user._id });
+  const hasLiabilities = await Liability.findOne({ user: user._id });
+  const hasInsurance = await Insurance.findOne({ user: user._id });
+  const hasGoals = await FinancialGoal.findOne({ user: user._id });
+
+  const allSaved = !!(
+    hasAssets &&
+    hasIncomes &&
+    hasExpenses &&
+    hasLiabilities &&
+    hasInsurance &&
+    hasGoals
+  );
+
+  res.status(200).json({ success: true, allSaved });
 });
 
 // Get Expenses
@@ -96,14 +122,19 @@ export const postAsset = handleAsync(async (req, res, next) => {
 
 // Post Expense
 export const postExpense = handleAsync(async (req, res, next) => {
-  const expense = await Expense.create({ ...req.body, user: req.user.id });
-  const user = await User.findById(req.user.id);
-  user.infoStatus.expenses = true;
-  await user.save();
-  res.status(201).json({
-    success: true,
-    expense,
-  });
+  try {
+    const expense = await Expense.create({ ...req.body, user: req.user.id });
+    const user = await User.findById(req.user.id);
+    user.infoStatus.expenses = true;
+    await user.save();
+    res.status(201).json({
+      success: true,
+      expense,
+    });
+  } catch (err) {
+    console.error("EXPENSE_ERROR:", err);
+    next(err);
+  }
 });
 
 // Post Financial Goal
@@ -123,14 +154,19 @@ export const postFinancialGoal = handleAsync(async (req, res, next) => {
 
 // Post Income
 export const postIncome = handleAsync(async (req, res, next) => {
-  const income = await Income.create({ ...req.body, user: req.user.id });
-  const user = await User.findById(req.user.id);
-  user.infoStatus.incomes = true;
-  await user.save();
-  res.status(201).json({
-    success: true,
-    income,
-  });
+  try {
+    const income = await Income.create({ ...req.body, user: req.user.id });
+    const user = await User.findById(req.user.id);
+    user.infoStatus.incomes = true;
+    await user.save();
+    res.status(201).json({
+      success: true,
+      income,
+    });
+  } catch (err) {
+    console.error("INCOME_ERROR:", err);
+    next(err);
+  }
 });
 
 // Post Insurance

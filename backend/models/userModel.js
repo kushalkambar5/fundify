@@ -34,10 +34,13 @@ const userSchema = new mongoose.Schema(
       public_id: {
         type: String,
         required: true,
+        default: "default_avatar_id",
       },
       url: {
         type: String,
         required: true,
+        default:
+          "https://img.sanishtech.com/u/4d4cc69635483ba63776ec075e4bbf11.png",
       },
     },
     isVerified: {
@@ -127,11 +130,10 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   if (this.isModified("passwordHash")) {
     this.passwordHash = await bcrypt.hash(this.passwordHash, 10);
   }
-  next();
 });
 
 userSchema.methods.comparePassword = async function (password) {

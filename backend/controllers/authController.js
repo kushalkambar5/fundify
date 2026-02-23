@@ -6,6 +6,14 @@ import sendToken from "../utils/jwtToken.js";
 import sendEmail from "../utils/sendEmail.js";
 import generateOtp from "../utils/generateOtp.js";
 
+// Models for checking onboarding status
+import Asset from "../models/assetModel.js";
+import Liability from "../models/liabilityModel.js";
+import Income from "../models/incomeModel.js";
+import Expense from "../models/expenseModel.js";
+import FinancialGoal from "../models/financialGoalModel.js";
+import Insurance from "../models/insuranceModel.js";
+
 // ─── Step 1: Verify Email — Send OTP ─────────────────────────────────────────
 // POST /api/v1/user/verify-email   body: { email }
 export const verifyEmail = handleAsync(async (req, res, next) => {
@@ -152,7 +160,7 @@ export const registerUser = handleAsync(async (req, res, next) => {
   const newUser = await User.create({
     name,
     email,
-    password,
+    passwordHash: password,
     phone,
     age,
     gender,
@@ -165,8 +173,12 @@ export const registerUser = handleAsync(async (req, res, next) => {
     dependents,
     employmentType,
     annualIncome,
-    riskProfile,
+    riskProfile: riskProfile.toLowerCase(),
     isVerified: true, // carries forward the verified status
+    avatar: {
+      public_id: "default_avatar_id",
+      url: "https://img.sanishtech.com/u/4d4cc69635483ba63776ec075e4bbf11.png",
+    },
   });
 
   // Clean up temp document
@@ -193,22 +205,28 @@ export const loginUser = handleAsync(async (req, res, next) => {
     return next(handleError(401, "Invalid email or password"));
   }
 
-  if (!!Asset.find({ user: user._id })) {
+  const hasAssets = await Asset.findOne({ user: user._id });
+  if (hasAssets) {
     user.infoStatus.assets = true;
   }
-  if (!!Liability.find({ user: user._id })) {
+  const hasLiabilities = await Liability.findOne({ user: user._id });
+  if (hasLiabilities) {
     user.infoStatus.liabilities = true;
   }
-  if (!!Income.find({ user: user._id })) {
+  const hasIncomes = await Income.findOne({ user: user._id });
+  if (hasIncomes) {
     user.infoStatus.incomes = true;
   }
-  if (!!Expense.find({ user: user._id })) {
+  const hasExpenses = await Expense.findOne({ user: user._id });
+  if (hasExpenses) {
     user.infoStatus.expenses = true;
   }
-  if (!!Goal.find({ user: user._id })) {
+  const hasGoals = await FinancialGoal.findOne({ user: user._id });
+  if (hasGoals) {
     user.infoStatus.goals = true;
   }
-  if (!!Insurance.find({ user: user._id })) {
+  const hasInsurance = await Insurance.findOne({ user: user._id });
+  if (hasInsurance) {
     user.infoStatus.insurance = true;
   }
 
