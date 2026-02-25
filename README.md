@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">💰 Fundify</h1>
+  <h1 align="center"><img src="frontend/public/logo.png" alt="Fundify Logo" width="40" style="vertical-align: middle;" /> Fundify</h1>
   <p align="center">
     <strong>AI-Powered Personal Finance Intelligence Platform</strong>
   </p>
