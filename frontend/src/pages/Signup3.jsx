@@ -90,6 +90,7 @@ function Signup3({ emailId, password }) {
       if (!user) return;
       try {
         setGeneralInfo((prev) => ({ ...prev, ...user }));
+        setSavedGen(true);
 
         // Parallel fetch for speed
         const [incRes, expRes, astRes, libRes, insRes, glsRes] =
@@ -113,6 +114,7 @@ function Signup3({ emailId, password }) {
               growthRate: i.growthRate,
             })),
           );
+          setSavedInc(true);
         }
         if (expRes.expenses && expRes.expenses.length > 0) {
           setExpenses(
@@ -123,6 +125,7 @@ function Signup3({ emailId, password }) {
               type: e.type,
             })),
           );
+          setSavedExp(true);
         }
         if (astRes.assets && astRes.assets.length > 0) {
           setAssets(
@@ -136,6 +139,7 @@ function Signup3({ emailId, password }) {
               liquidityLevel: a.liquidityLevel,
             })),
           );
+          setSavedAsset(true);
         }
         if (libRes.liabilities && libRes.liabilities.length > 0) {
           setLiabilities(
@@ -149,6 +153,7 @@ function Signup3({ emailId, password }) {
               tenureRemaining: l.tenureRemaining,
             })),
           );
+          setSavedLiab(true);
         }
         if (insRes.insurances && insRes.insurances.length > 0) {
           setInsurances(
@@ -161,6 +166,7 @@ function Signup3({ emailId, password }) {
               maturityDate: i.maturityDate,
             })),
           );
+          setSavedIns(true);
         }
         if (glsRes.financialGoals && glsRes.financialGoals.length > 0) {
           setGoals(
@@ -174,6 +180,7 @@ function Signup3({ emailId, password }) {
               currentSavingsForGoal: g.currentSavingsForGoal,
             })),
           );
+          setSavedGoal(true);
         }
       } catch (err) {
         toast.error("Error loading user financial data");
@@ -188,16 +195,19 @@ function Signup3({ emailId, password }) {
   const [loadingGen, setLoadingGen] = useState(false);
   const [savedGen, setSavedGen] = useState(false);
   const [errorGen, setErrorGen] = useState("");
+  const [isGenModified, setIsGenModified] = useState(false);
 
   const handleGenInfoChange = (e) => {
     const { name, value } = e.target;
     setGeneralInfo((prev) => ({ ...prev, [name]: value }));
     setSavedGen(false);
+    setIsGenModified(true);
   };
 
   const setRiskProfile = (profile) => {
     setGeneralInfo((prev) => ({ ...prev, riskProfile: profile }));
     setSavedGen(false);
+    setIsGenModified(true);
   };
 
   const handleSaveGeneralInfo = async () => {
@@ -224,6 +234,7 @@ function Signup3({ emailId, password }) {
         await registerUser(userData);
       }
       setSavedGen(true);
+      setIsGenModified(false);
     } catch (err) {
       setErrorGen(
         err.response?.data?.message || "Failed to save General Information.",
@@ -240,12 +251,14 @@ function Signup3({ emailId, password }) {
   const [loadingInc, setLoadingInc] = useState(false);
   const [savedInc, setSavedInc] = useState(false);
   const [errorInc, setErrorInc] = useState("");
+  const [isIncModified, setIsIncModified] = useState(false);
 
   const handleAppIncomeChange = (index, field, value) => {
     const newIncomes = [...incomes];
     newIncomes[index][field] = value;
     setIncomes(newIncomes);
     setSavedInc(false);
+    setIsIncModified(true);
   };
 
   const addIncomeRow = () => {
@@ -254,6 +267,7 @@ function Signup3({ emailId, password }) {
       { sourceType: "investment", amount: "", growthRate: "0" },
     ]);
     setSavedInc(false);
+    setIsIncModified(true);
   };
 
   const handleSaveIncome = async () => {
@@ -283,6 +297,7 @@ function Signup3({ emailId, password }) {
         await markOnboardingStep("incomes");
       }
       setSavedInc(true);
+      setIsIncModified(false);
       // Optional: re-fetch to get new IDs
     } catch (err) {
       setErrorInc("Failed to save Income Details.");
@@ -304,6 +319,7 @@ function Signup3({ emailId, password }) {
     newIncomes.splice(index, 1);
     setIncomes(newIncomes);
     setSavedInc(false);
+    setIsIncModified(true);
   };
 
   // --- EXPENSES STATE --------
@@ -314,12 +330,14 @@ function Signup3({ emailId, password }) {
   const [loadingExp, setLoadingExp] = useState(false);
   const [savedExp, setSavedExp] = useState(false);
   const [errorExp, setErrorExp] = useState("");
+  const [isExpModified, setIsExpModified] = useState(false);
 
   const handleExpenseChange = (index, field, value) => {
     const newExp = [...expenses];
     newExp[index][field] = value;
     setExpenses(newExp);
     setSavedExp(false);
+    setIsExpModified(true);
   };
 
   const addExpenseRow = () => {
@@ -328,6 +346,7 @@ function Signup3({ emailId, password }) {
       { category: "other", amount: "", type: "variable" },
     ]);
     setSavedExp(false);
+    setIsExpModified(true);
   };
 
   const handleSaveExpense = async () => {
@@ -356,6 +375,7 @@ function Signup3({ emailId, password }) {
         await markOnboardingStep("expenses");
       }
       setSavedExp(true);
+      setIsExpModified(false);
     } catch (err) {
       setErrorExp("Failed to save Expenses.");
     } finally {
@@ -376,6 +396,7 @@ function Signup3({ emailId, password }) {
     newExp.splice(index, 1);
     setExpenses(newExp);
     setSavedExp(false);
+    setIsExpModified(true);
   };
 
   // --- ASSETS STATE --------
@@ -392,12 +413,14 @@ function Signup3({ emailId, password }) {
   const [loadingAsset, setLoadingAsset] = useState(false);
   const [savedAsset, setSavedAsset] = useState(false);
   const [errorAsset, setErrorAsset] = useState("");
+  const [isAssetModified, setIsAssetModified] = useState(false);
 
   const handleAssetChange = (index, field, value) => {
     const newAssets = [...assets];
     newAssets[index][field] = value;
     setAssets(newAssets);
     setSavedAsset(false);
+    setIsAssetModified(true);
   };
 
   const addAssetRow = () => {
@@ -413,6 +436,7 @@ function Signup3({ emailId, password }) {
       },
     ]);
     setSavedAsset(false);
+    setIsAssetModified(true);
   };
 
   const handleSaveAssets = async () => {
@@ -442,6 +466,7 @@ function Signup3({ emailId, password }) {
         await markOnboardingStep("assets");
       }
       setSavedAsset(true);
+      setIsAssetModified(false);
     } catch (err) {
       setErrorAsset("Failed to save Assets.");
     } finally {
@@ -462,6 +487,7 @@ function Signup3({ emailId, password }) {
     newAssets.splice(index, 1);
     setAssets(newAssets);
     setSavedAsset(false);
+    setIsAssetModified(true);
   };
 
   // --- LIABILITIES STATE --------
@@ -478,12 +504,14 @@ function Signup3({ emailId, password }) {
   const [loadingLiab, setLoadingLiab] = useState(false);
   const [savedLiab, setSavedLiab] = useState(false);
   const [errorLiab, setErrorLiab] = useState("");
+  const [isLiabModified, setIsLiabModified] = useState(false);
 
   const handleLiabilityChange = (index, field, value) => {
     const newLiab = [...liabilities];
     newLiab[index][field] = value;
     setLiabilities(newLiab);
     setSavedLiab(false);
+    setIsLiabModified(true);
   };
 
   const addLiabilityRow = () => {
@@ -499,6 +527,7 @@ function Signup3({ emailId, password }) {
       },
     ]);
     setSavedLiab(false);
+    setIsLiabModified(true);
   };
 
   const handleSaveLiabilities = async () => {
@@ -528,6 +557,7 @@ function Signup3({ emailId, password }) {
         await markOnboardingStep("liabilities");
       }
       setSavedLiab(true);
+      setIsLiabModified(false);
     } catch (err) {
       setErrorLiab("Failed to save Liabilities.");
     } finally {
@@ -548,6 +578,7 @@ function Signup3({ emailId, password }) {
     newLiab.splice(index, 1);
     setLiabilities(newLiab);
     setSavedLiab(false);
+    setIsLiabModified(true);
   };
 
   // --- INSURANCE STATE --------
@@ -563,12 +594,14 @@ function Signup3({ emailId, password }) {
   const [loadingIns, setLoadingIns] = useState(false);
   const [savedIns, setSavedIns] = useState(false);
   const [errorIns, setErrorIns] = useState("");
+  const [isInsModified, setIsInsModified] = useState(false);
 
   const handleInsuranceChange = (index, field, value) => {
     const newIns = [...insurances];
     newIns[index][field] = value;
     setInsurances(newIns);
     setSavedIns(false);
+    setIsInsModified(true);
   };
 
   const addInsuranceRow = () => {
@@ -583,6 +616,7 @@ function Signup3({ emailId, password }) {
       },
     ]);
     setSavedIns(false);
+    setIsInsModified(true);
   };
 
   const handleSaveInsurance = async () => {
@@ -615,6 +649,7 @@ function Signup3({ emailId, password }) {
         await markOnboardingStep("insurance");
       }
       setSavedIns(true);
+      setIsInsModified(false);
     } catch (err) {
       setErrorIns("Failed to save Insurance.");
     } finally {
@@ -635,6 +670,7 @@ function Signup3({ emailId, password }) {
     newIns.splice(index, 1);
     setInsurances(newIns);
     setSavedIns(false);
+    setIsInsModified(true);
   };
 
   // --- GOALS STATE --------
@@ -651,12 +687,14 @@ function Signup3({ emailId, password }) {
   const [loadingGoal, setLoadingGoal] = useState(false);
   const [savedGoal, setSavedGoal] = useState(false);
   const [errorGoal, setErrorGoal] = useState("");
+  const [isGoalModified, setIsGoalModified] = useState(false);
 
   const handleGoalChange = (index, field, value) => {
     const newGoals = [...goals];
     newGoals[index][field] = value;
     setGoals(newGoals);
     setSavedGoal(false);
+    setIsGoalModified(true);
   };
 
   const addGoalRow = () => {
@@ -672,6 +710,7 @@ function Signup3({ emailId, password }) {
       },
     ]);
     setSavedGoal(false);
+    setIsGoalModified(true);
   };
 
   const handleSaveGoals = async () => {
@@ -706,6 +745,7 @@ function Signup3({ emailId, password }) {
         await markOnboardingStep("goals");
       }
       setSavedGoal(true);
+      setIsGoalModified(false);
     } catch (err) {
       setErrorGoal("Failed to save Goals.");
     } finally {
@@ -726,6 +766,7 @@ function Signup3({ emailId, password }) {
     newGoals.splice(index, 1);
     setGoals(newGoals);
     setSavedGoal(false);
+    setIsGoalModified(true);
   };
 
   const [isDbAllSaved, setIsDbAllSaved] = useState(false);
@@ -916,6 +957,7 @@ function Signup3({ emailId, password }) {
                 loading={loadingGen}
                 error={errorGen}
                 onSave={handleSaveGeneralInfo}
+                isModified={isGenModified}
               >
                 <div className="mb-6">
                   <div className="flex items-center gap-2 text-slate-400 mb-4">
@@ -1206,6 +1248,7 @@ function Signup3({ emailId, password }) {
                     ? "Save Income Details"
                     : "I don't have an Income"
                 }
+                isModified={isIncModified}
               >
                 <div className="space-y-4">
                   {incomes.map((inc, index) => (
@@ -1313,6 +1356,7 @@ function Signup3({ emailId, password }) {
                     ? "Save Monthly Expenses"
                     : "I don't have Expenses"
                 }
+                isModified={isExpModified}
               >
                 <div className="space-y-4">
                   {expenses.map((exp, index) => (
@@ -1414,6 +1458,7 @@ function Signup3({ emailId, password }) {
                     ? "Save Assets & Investments"
                     : "I don't have Assets"
                 }
+                isModified={isAssetModified}
               >
                 <div className="space-y-4">
                   {assets.map((asset, index) => (
@@ -1567,6 +1612,7 @@ function Signup3({ emailId, password }) {
                     ? "Save Liabilities"
                     : "I don't have Liabilities"
                 }
+                isModified={isLiabModified}
               >
                 <div className="space-y-4">
                   {liabilities.map((liab, index) => (
@@ -1728,6 +1774,7 @@ function Signup3({ emailId, password }) {
                     ? "Save Insurance Policies"
                     : "I don't have Insurance"
                 }
+                isModified={isInsModified}
               >
                 <div className="space-y-4">
                   {insurances.map((ins, index) => (
@@ -1876,6 +1923,7 @@ function Signup3({ emailId, password }) {
                     ? "Save Financial Goals"
                     : "I don't have Goals"
                 }
+                isModified={isGoalModified}
               >
                 <div className="space-y-4">
                   {goals.map((goal, index) => (

@@ -13,6 +13,7 @@ function SectionCard({
   iconColor = "text-emerald-600",
   headerAction,
   saveBtnText,
+  isModified = true,
 }) {
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm flex flex-col justify-center">
@@ -57,9 +58,9 @@ function SectionCard({
       <div className="pt-6 mt-4 border-t border-slate-50">
         <button
           onClick={onSave}
-          disabled={loading || saved}
+          disabled={loading || saved || !isModified}
           className={`w-full text-white font-bold py-3.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm ${
-            loading || saved
+            loading || saved || !isModified
               ? "bg-slate-300 cursor-not-allowed"
               : "bg-emerald-500 hover:bg-emerald-600"
           }`}

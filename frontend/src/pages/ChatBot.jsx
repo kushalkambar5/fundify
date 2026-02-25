@@ -43,7 +43,7 @@ const TypewriterMessage = ({ content, scroll }) => {
       if (i >= content.length) {
         clearInterval(interval);
       }
-    }, 15);
+    }, 12);
     return () => clearInterval(interval);
   }, [content]);
 
