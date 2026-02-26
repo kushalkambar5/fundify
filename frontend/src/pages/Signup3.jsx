@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import AuthOnboardingHeader from "../components/auth/AuthOnboardingHeader";
 import SectionCard from "../components/signup/SectionCard";
 import {
@@ -89,6 +90,7 @@ function Signup3({ emailId, password }) {
       if (!user) return;
       try {
         setGeneralInfo((prev) => ({ ...prev, ...user }));
+        setSavedGen(true);
 
         // Parallel fetch for speed
         const [incRes, expRes, astRes, libRes, insRes, glsRes] =
@@ -112,6 +114,7 @@ function Signup3({ emailId, password }) {
               growthRate: i.growthRate,
             })),
           );
+          setSavedInc(true);
         }
         if (expRes.expenses && expRes.expenses.length > 0) {
           setExpenses(
@@ -122,6 +125,7 @@ function Signup3({ emailId, password }) {
               type: e.type,
             })),
           );
+          setSavedExp(true);
         }
         if (astRes.assets && astRes.assets.length > 0) {
           setAssets(
@@ -135,6 +139,7 @@ function Signup3({ emailId, password }) {
               liquidityLevel: a.liquidityLevel,
             })),
           );
+          setSavedAsset(true);
         }
         if (libRes.liabilities && libRes.liabilities.length > 0) {
           setLiabilities(
@@ -148,6 +153,7 @@ function Signup3({ emailId, password }) {
               tenureRemaining: l.tenureRemaining,
             })),
           );
+          setSavedLiab(true);
         }
         if (insRes.insurances && insRes.insurances.length > 0) {
           setInsurances(
@@ -160,6 +166,7 @@ function Signup3({ emailId, password }) {
               maturityDate: i.maturityDate,
             })),
           );
+          setSavedIns(true);
         }
         if (glsRes.financialGoals && glsRes.financialGoals.length > 0) {
           setGoals(
@@ -173,9 +180,10 @@ function Signup3({ emailId, password }) {
               currentSavingsForGoal: g.currentSavingsForGoal,
             })),
           );
+          setSavedGoal(true);
         }
       } catch (err) {
-        console.error("Error loading user financial data:", err);
+        toast.error("Error loading user financial data");
       }
     };
     loadUserData();
@@ -187,14 +195,19 @@ function Signup3({ emailId, password }) {
   const [loadingGen, setLoadingGen] = useState(false);
   const [savedGen, setSavedGen] = useState(false);
   const [errorGen, setErrorGen] = useState("");
+  const [isGenModified, setIsGenModified] = useState(false);
 
   const handleGenInfoChange = (e) => {
     const { name, value } = e.target;
     setGeneralInfo((prev) => ({ ...prev, [name]: value }));
+    setSavedGen(false);
+    setIsGenModified(true);
   };
 
   const setRiskProfile = (profile) => {
     setGeneralInfo((prev) => ({ ...prev, riskProfile: profile }));
+    setSavedGen(false);
+    setIsGenModified(true);
   };
 
   const handleSaveGeneralInfo = async () => {
@@ -221,6 +234,7 @@ function Signup3({ emailId, password }) {
         await registerUser(userData);
       }
       setSavedGen(true);
+      setIsGenModified(false);
     } catch (err) {
       setErrorGen(
         err.response?.data?.message || "Failed to save General Information.",
@@ -237,11 +251,14 @@ function Signup3({ emailId, password }) {
   const [loadingInc, setLoadingInc] = useState(false);
   const [savedInc, setSavedInc] = useState(false);
   const [errorInc, setErrorInc] = useState("");
+  const [isIncModified, setIsIncModified] = useState(false);
 
   const handleAppIncomeChange = (index, field, value) => {
     const newIncomes = [...incomes];
     newIncomes[index][field] = value;
     setIncomes(newIncomes);
+    setSavedInc(false);
+    setIsIncModified(true);
   };
 
   const addIncomeRow = () => {
@@ -249,6 +266,8 @@ function Signup3({ emailId, password }) {
       ...incomes,
       { sourceType: "investment", amount: "", growthRate: "0" },
     ]);
+    setSavedInc(false);
+    setIsIncModified(true);
   };
 
   const handleSaveIncome = async () => {
@@ -278,6 +297,7 @@ function Signup3({ emailId, password }) {
         await markOnboardingStep("incomes");
       }
       setSavedInc(true);
+      setIsIncModified(false);
       // Optional: re-fetch to get new IDs
     } catch (err) {
       setErrorInc("Failed to save Income Details.");
@@ -292,12 +312,14 @@ function Signup3({ emailId, password }) {
       try {
         await deleteIncome(inc._id);
       } catch (err) {
-        console.error("Failed to delete income", err);
+        toast.error("Failed to delete income");
       }
     }
     const newIncomes = [...incomes];
     newIncomes.splice(index, 1);
     setIncomes(newIncomes);
+    setSavedInc(false);
+    setIsIncModified(true);
   };
 
   // --- EXPENSES STATE --------
@@ -308,11 +330,14 @@ function Signup3({ emailId, password }) {
   const [loadingExp, setLoadingExp] = useState(false);
   const [savedExp, setSavedExp] = useState(false);
   const [errorExp, setErrorExp] = useState("");
+  const [isExpModified, setIsExpModified] = useState(false);
 
   const handleExpenseChange = (index, field, value) => {
     const newExp = [...expenses];
     newExp[index][field] = value;
     setExpenses(newExp);
+    setSavedExp(false);
+    setIsExpModified(true);
   };
 
   const addExpenseRow = () => {
@@ -320,6 +345,8 @@ function Signup3({ emailId, password }) {
       ...expenses,
       { category: "other", amount: "", type: "variable" },
     ]);
+    setSavedExp(false);
+    setIsExpModified(true);
   };
 
   const handleSaveExpense = async () => {
@@ -348,6 +375,7 @@ function Signup3({ emailId, password }) {
         await markOnboardingStep("expenses");
       }
       setSavedExp(true);
+      setIsExpModified(false);
     } catch (err) {
       setErrorExp("Failed to save Expenses.");
     } finally {
@@ -361,12 +389,14 @@ function Signup3({ emailId, password }) {
       try {
         await deleteExpense(exp._id);
       } catch (err) {
-        console.error("Failed to delete expense", err);
+        toast.error("Failed to delete expense");
       }
     }
     const newExp = [...expenses];
     newExp.splice(index, 1);
     setExpenses(newExp);
+    setSavedExp(false);
+    setIsExpModified(true);
   };
 
   // --- ASSETS STATE --------
@@ -383,11 +413,14 @@ function Signup3({ emailId, password }) {
   const [loadingAsset, setLoadingAsset] = useState(false);
   const [savedAsset, setSavedAsset] = useState(false);
   const [errorAsset, setErrorAsset] = useState("");
+  const [isAssetModified, setIsAssetModified] = useState(false);
 
   const handleAssetChange = (index, field, value) => {
     const newAssets = [...assets];
     newAssets[index][field] = value;
     setAssets(newAssets);
+    setSavedAsset(false);
+    setIsAssetModified(true);
   };
 
   const addAssetRow = () => {
@@ -402,6 +435,8 @@ function Signup3({ emailId, password }) {
         liquidityLevel: "medium",
       },
     ]);
+    setSavedAsset(false);
+    setIsAssetModified(true);
   };
 
   const handleSaveAssets = async () => {
@@ -431,6 +466,7 @@ function Signup3({ emailId, password }) {
         await markOnboardingStep("assets");
       }
       setSavedAsset(true);
+      setIsAssetModified(false);
     } catch (err) {
       setErrorAsset("Failed to save Assets.");
     } finally {
@@ -444,12 +480,14 @@ function Signup3({ emailId, password }) {
       try {
         await deleteAsset(a._id);
       } catch (err) {
-        console.error("Failed to delete asset", err);
+        toast.error("Failed to delete asset");
       }
     }
     const newAssets = [...assets];
     newAssets.splice(index, 1);
     setAssets(newAssets);
+    setSavedAsset(false);
+    setIsAssetModified(true);
   };
 
   // --- LIABILITIES STATE --------
@@ -466,11 +504,14 @@ function Signup3({ emailId, password }) {
   const [loadingLiab, setLoadingLiab] = useState(false);
   const [savedLiab, setSavedLiab] = useState(false);
   const [errorLiab, setErrorLiab] = useState("");
+  const [isLiabModified, setIsLiabModified] = useState(false);
 
   const handleLiabilityChange = (index, field, value) => {
     const newLiab = [...liabilities];
     newLiab[index][field] = value;
     setLiabilities(newLiab);
+    setSavedLiab(false);
+    setIsLiabModified(true);
   };
 
   const addLiabilityRow = () => {
@@ -485,6 +526,8 @@ function Signup3({ emailId, password }) {
         tenureRemaining: "",
       },
     ]);
+    setSavedLiab(false);
+    setIsLiabModified(true);
   };
 
   const handleSaveLiabilities = async () => {
@@ -514,6 +557,7 @@ function Signup3({ emailId, password }) {
         await markOnboardingStep("liabilities");
       }
       setSavedLiab(true);
+      setIsLiabModified(false);
     } catch (err) {
       setErrorLiab("Failed to save Liabilities.");
     } finally {
@@ -527,12 +571,14 @@ function Signup3({ emailId, password }) {
       try {
         await deleteLiability(l._id);
       } catch (err) {
-        console.error("Failed to delete liability", err);
+        toast.error("Failed to delete liability");
       }
     }
     const newLiab = [...liabilities];
     newLiab.splice(index, 1);
     setLiabilities(newLiab);
+    setSavedLiab(false);
+    setIsLiabModified(true);
   };
 
   // --- INSURANCE STATE --------
@@ -548,11 +594,14 @@ function Signup3({ emailId, password }) {
   const [loadingIns, setLoadingIns] = useState(false);
   const [savedIns, setSavedIns] = useState(false);
   const [errorIns, setErrorIns] = useState("");
+  const [isInsModified, setIsInsModified] = useState(false);
 
   const handleInsuranceChange = (index, field, value) => {
     const newIns = [...insurances];
     newIns[index][field] = value;
     setInsurances(newIns);
+    setSavedIns(false);
+    setIsInsModified(true);
   };
 
   const addInsuranceRow = () => {
@@ -566,6 +615,8 @@ function Signup3({ emailId, password }) {
         maturityDate: "",
       },
     ]);
+    setSavedIns(false);
+    setIsInsModified(true);
   };
 
   const handleSaveInsurance = async () => {
@@ -598,6 +649,7 @@ function Signup3({ emailId, password }) {
         await markOnboardingStep("insurance");
       }
       setSavedIns(true);
+      setIsInsModified(false);
     } catch (err) {
       setErrorIns("Failed to save Insurance.");
     } finally {
@@ -611,12 +663,14 @@ function Signup3({ emailId, password }) {
       try {
         await deleteInsurance(i._id);
       } catch (err) {
-        console.error("Failed to delete insurance", err);
+        toast.error("Failed to delete insurance");
       }
     }
     const newIns = [...insurances];
     newIns.splice(index, 1);
     setInsurances(newIns);
+    setSavedIns(false);
+    setIsInsModified(true);
   };
 
   // --- GOALS STATE --------
@@ -633,11 +687,14 @@ function Signup3({ emailId, password }) {
   const [loadingGoal, setLoadingGoal] = useState(false);
   const [savedGoal, setSavedGoal] = useState(false);
   const [errorGoal, setErrorGoal] = useState("");
+  const [isGoalModified, setIsGoalModified] = useState(false);
 
   const handleGoalChange = (index, field, value) => {
     const newGoals = [...goals];
     newGoals[index][field] = value;
     setGoals(newGoals);
+    setSavedGoal(false);
+    setIsGoalModified(true);
   };
 
   const addGoalRow = () => {
@@ -652,6 +709,8 @@ function Signup3({ emailId, password }) {
         currentSavingsForGoal: "0",
       },
     ]);
+    setSavedGoal(false);
+    setIsGoalModified(true);
   };
 
   const handleSaveGoals = async () => {
@@ -686,6 +745,7 @@ function Signup3({ emailId, password }) {
         await markOnboardingStep("goals");
       }
       setSavedGoal(true);
+      setIsGoalModified(false);
     } catch (err) {
       setErrorGoal("Failed to save Goals.");
     } finally {
@@ -699,12 +759,14 @@ function Signup3({ emailId, password }) {
       try {
         await deleteFinancialGoal(g._id);
       } catch (err) {
-        console.error("Failed to delete goal", err);
+        toast.error("Failed to delete goal");
       }
     }
     const newGoals = [...goals];
     newGoals.splice(index, 1);
     setGoals(newGoals);
+    setSavedGoal(false);
+    setIsGoalModified(true);
   };
 
   const [isDbAllSaved, setIsDbAllSaved] = useState(false);
@@ -751,10 +813,10 @@ function Signup3({ emailId, password }) {
                 <span className="text-xs font-semibold text-slate-700">
                   Step 3 of 3
                 </span>
-                <span className="text-xs font-bold text-blue-600">100%</span>
+                <span className="text-xs font-bold text-emerald-600">100%</span>
               </div>
-              <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
-                <div className="bg-blue-600 h-full w-full rounded-full"></div>
+              <div className="h-1.5 w-full bg-emerald-50 rounded-full overflow-hidden">
+                <div className="bg-emerald-500 h-full w-full rounded-full shadow-sm shadow-emerald-200"></div>
               </div>
             </div>
 
@@ -872,11 +934,11 @@ function Signup3({ emailId, password }) {
                   navigate("/dashboard");
                 }}
                 disabled={!allSaved}
-                className={`font-bold py-2.5 px-6 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2 whitespace-nowrap ${
-                  allSaved
-                    ? "bg-blue-700 hover:bg-blue-800 text-white shadow-blue-700/20"
-                    : "bg-slate-200 text-slate-400 shadow-none cursor-not-allowed"
-                }`}
+                className={`relative overflow-hidden w-full group rounded-2xl font-bold px-8 py-4 transition-all duration-300 flex items-center justify-center gap-3 ${
+                  isDbAllSaved
+                    ? "bg-emerald-700 text-white shadow-emerald-700/20 btn-hover-animate"
+                    : "bg-emerald-500 text-white shadow-emerald-500/20 btn-hover-animate"
+                } disabled:opacity-75 disabled:cursor-not-allowed`}
               >
                 Finish Onboarding
                 <span className="material-symbols-outlined text-[18px]">
@@ -895,6 +957,7 @@ function Signup3({ emailId, password }) {
                 loading={loadingGen}
                 error={errorGen}
                 onSave={handleSaveGeneralInfo}
+                isModified={isGenModified}
               >
                 <div className="mb-6">
                   <div className="flex items-center gap-2 text-slate-400 mb-4">
@@ -1145,21 +1208,21 @@ function Signup3({ emailId, password }) {
                       <button
                         type="button"
                         onClick={() => setRiskProfile("conservative")}
-                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "conservative" ? "font-bold bg-white shadow-sm border border-slate-100 text-blue-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
+                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "conservative" ? "font-bold bg-white shadow-sm border border-slate-100 text-emerald-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
                       >
                         Conservative
                       </button>
                       <button
                         type="button"
                         onClick={() => setRiskProfile("moderate")}
-                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "moderate" ? "font-bold bg-white shadow-sm border border-slate-100 text-blue-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
+                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "moderate" ? "font-bold bg-white shadow-sm border border-slate-100 text-emerald-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
                       >
                         Moderate
                       </button>
                       <button
                         type="button"
                         onClick={() => setRiskProfile("aggressive")}
-                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "aggressive" ? "font-bold bg-white shadow-sm border border-slate-100 text-blue-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
+                        className={`flex-1 text-sm py-2.5 rounded-lg transition-colors ${generalInfo.riskProfile === "aggressive" ? "font-bold bg-white shadow-sm border border-slate-100 text-emerald-600" : "font-medium text-slate-500 hover:text-slate-700"}`}
                       >
                         Aggressive
                       </button>
@@ -1185,6 +1248,7 @@ function Signup3({ emailId, password }) {
                     ? "Save Income Details"
                     : "I don't have an Income"
                 }
+                isModified={isIncModified}
               >
                 <div className="space-y-4">
                   {incomes.map((inc, index) => (
@@ -1263,7 +1327,7 @@ function Signup3({ emailId, password }) {
                   <button
                     type="button"
                     onClick={addIncomeRow}
-                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1 mt-4"
+                    className="text-emerald-600 font-semibold text-sm hover:text-emerald-700 transition-colors flex items-center gap-1 mt-4"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       add
@@ -1292,6 +1356,7 @@ function Signup3({ emailId, password }) {
                     ? "Save Monthly Expenses"
                     : "I don't have Expenses"
                 }
+                isModified={isExpModified}
               >
                 <div className="space-y-4">
                   {expenses.map((exp, index) => (
@@ -1368,7 +1433,7 @@ function Signup3({ emailId, password }) {
                   <button
                     type="button"
                     onClick={addExpenseRow}
-                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1 mt-4"
+                    className="text-emerald-600 font-semibold text-sm hover:text-emerald-700 transition-colors flex items-center gap-1 mt-4"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       add
@@ -1393,6 +1458,7 @@ function Signup3({ emailId, password }) {
                     ? "Save Assets & Investments"
                     : "I don't have Assets"
                 }
+                isModified={isAssetModified}
               >
                 <div className="space-y-4">
                   {assets.map((asset, index) => (
@@ -1432,8 +1498,8 @@ function Signup3({ emailId, password }) {
                           />
                         </div>
                       </div>
-                      <div className="flex gap-2 items-center">
-                        <div className="relative flex-1">
+                      <div className="flex gap-2 items-center flex-wrap sm:flex-nowrap">
+                        <div className="relative flex-1 min-w-[110px]">
                           <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
                             ₹
                           </span>
@@ -1443,11 +1509,11 @@ function Signup3({ emailId, password }) {
                             onChange={(e) =>
                               handleAssetChange(index, "amount", e.target.value)
                             }
-                            placeholder="Current Value"
-                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                            placeholder="Value"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
                           />
                         </div>
-                        <div className="relative flex-1">
+                        <div className="relative flex-1 min-w-[110px]">
                           <span className="absolute left-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
                             ₹
                           </span>
@@ -1461,11 +1527,11 @@ function Signup3({ emailId, password }) {
                                 e.target.value,
                               )
                             }
-                            placeholder="Invested Amount"
-                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                            placeholder="Invested"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm rounded-lg pl-7 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
                           />
                         </div>
-                        <div className="relative w-1/4">
+                        <div className="relative w-full sm:w-1/4 min-w-[80px]">
                           <span className="absolute right-3 top-[10px] text-slate-400 text-sm font-medium pointer-events-none">
                             %
                           </span>
@@ -1479,8 +1545,8 @@ function Signup3({ emailId, password }) {
                                 e.target.value,
                               )
                             }
-                            placeholder="Return %"
-                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-3 pr-7 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
+                            placeholder="Ret %"
+                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm rounded-lg pl-3 pr-7 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors font-medium placeholder:text-slate-400"
                           />
                         </div>
                         <div className="relative w-1/3">
@@ -1546,6 +1612,7 @@ function Signup3({ emailId, password }) {
                     ? "Save Liabilities"
                     : "I don't have Liabilities"
                 }
+                isModified={isLiabModified}
               >
                 <div className="space-y-4">
                   {liabilities.map((liab, index) => (
@@ -1680,7 +1747,7 @@ function Signup3({ emailId, password }) {
                   <button
                     type="button"
                     onClick={addLiabilityRow}
-                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1"
+                    className="text-emerald-600 font-semibold text-sm hover:text-emerald-700 transition-colors flex items-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       add
@@ -1707,6 +1774,7 @@ function Signup3({ emailId, password }) {
                     ? "Save Insurance Policies"
                     : "I don't have Insurance"
                 }
+                isModified={isInsModified}
               >
                 <div className="space-y-4">
                   {insurances.map((ins, index) => (
@@ -1828,7 +1896,7 @@ function Signup3({ emailId, password }) {
                   <button
                     type="button"
                     onClick={addInsuranceRow}
-                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1"
+                    className="text-emerald-600 font-semibold text-sm hover:text-emerald-700 transition-colors flex items-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       add
@@ -1855,6 +1923,7 @@ function Signup3({ emailId, password }) {
                     ? "Save Financial Goals"
                     : "I don't have Goals"
                 }
+                isModified={isGoalModified}
               >
                 <div className="space-y-4">
                   {goals.map((goal, index) => (
@@ -1998,7 +2067,7 @@ function Signup3({ emailId, password }) {
                   <button
                     type="button"
                     onClick={addGoalRow}
-                    className="text-blue-600 font-semibold text-sm hover:text-blue-700 transition-colors flex items-center gap-1"
+                    className="text-emerald-600 font-semibold text-sm hover:text-emerald-700 transition-colors flex items-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       add
@@ -2018,14 +2087,14 @@ function Signup3({ emailId, password }) {
                   navigate("/dashboard");
                 }}
                 disabled={!allSaved}
-                className={`font-bold py-3 px-8 text-lg rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 whitespace-nowrap ${
+                className={`relative overflow-hidden w-full group rounded-2xl font-bold py-3 px-8 text-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${
                   allSaved
-                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/30 ring-4 ring-blue-600/10"
+                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/30 ring-4 ring-blue-600/10 btn-hover-animate"
                     : "bg-slate-200 text-slate-400 shadow-none cursor-not-allowed"
                 }`}
               >
                 Get Results
-                <span className="material-symbols-outlined text-[20px] font-bold">
+                <span className="material-symbols-outlined text-[20px] btn-icon-animate">
                   arrow_forward
                 </span>
               </button>

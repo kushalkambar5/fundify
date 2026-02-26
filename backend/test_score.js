@@ -19,8 +19,11 @@ mongoose
         expiresIn: "1d",
       });
 
+      const PORT = process.env.PORT || 5000;
+      const API_URL = process.env.API_URL || `http://localhost:${PORT}/api/v1`;
+
       await axios.post(
-        "http://localhost:5000/api/v1/score/financial-health",
+        `${API_URL}/score/financial-health`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

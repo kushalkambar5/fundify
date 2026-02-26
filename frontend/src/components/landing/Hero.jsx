@@ -55,12 +55,14 @@ function Hero() {
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <Link
               to="/signup"
-              className="text-center bg-navy-deep dark:bg-primary text-white dark:text-navy-deep px-8 py-4 rounded-xl font-bold text-lg shadow-[0_10px_40px_-10px_rgba(10,25,47,0.5)] dark:shadow-[0_10px_40px_-10px_rgba(13,242,185,0.5)] hover:-translate-y-1 hover:scale-[1.02] transition-all"
+              className="text-center bg-navy-deep dark:bg-primary text-white dark:text-navy-deep px-8 py-4 rounded-xl font-bold text-lg shadow-[0_10px_40px_-10px_rgba(10,25,47,0.5)] dark:shadow-[0_10px_40px_-10px_rgba(13,242,185,0.5)] btn-hover-animate"
             >
               Start Fundify Free Trial
             </Link>
-            <button className="flex items-center justify-center gap-2 border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-sm px-8 py-4 rounded-xl font-bold text-lg hover:bg-slate-50 dark:hover:bg-white/10 transition-colors dark:text-white">
-              <span className="material-symbols-outlined">play_circle</span>
+            <button className="flex items-center justify-center gap-2 border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-sm px-8 py-4 rounded-xl font-bold text-lg group btn-hover-animate hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white">
+              <span className="material-symbols-outlined btn-icon-animate">
+                play_circle
+              </span>
               See How Fundify Works
             </button>
           </div>

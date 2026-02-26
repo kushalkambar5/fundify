@@ -124,17 +124,20 @@ function Login() {
                 </label>
               </div>
               <button
-                className={`w-full text-white font-bold py-4 px-6 rounded-xl shadow-md transition-all mt-2 flex items-center justify-center gap-2 ${
+                className={`w-full text-white font-bold py-4 px-6 rounded-xl shadow-md transition-all mt-2 flex items-center justify-center gap-2 group ${
                   isSubmitting
                     ? "bg-slate-400 cursor-not-allowed"
-                    : "bg-navy hover:bg-slate-800 active:scale-[0.99]"
+                    : "bg-navy btn-hover-animate text-white border-none"
                 }`}
+                style={{
+                  backgroundColor: isSubmitting ? undefined : "#0f172a",
+                }}
                 type="submit"
                 disabled={isSubmitting}
               >
                 <span>{isSubmitting ? "Logging in..." : "Login"}</span>
                 {!isSubmitting && (
-                  <span className="material-symbols-outlined text-[20px]">
+                  <span className="material-symbols-outlined text-[20px] btn-icon-animate">
                     chevron_right
                   </span>
                 )}

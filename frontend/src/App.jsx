@@ -1,5 +1,6 @@
 import React from "react";
 import Landing from "./pages/Landing";
+import { Toaster } from "react-hot-toast";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
@@ -9,6 +10,7 @@ import Signup3 from "./pages/Signup3";
 import LegalPrivacy from "./pages/LegalPrivacy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import Profile from "./pages/Profile";
+import ChatBot from "./pages/ChatBot";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
@@ -21,6 +23,7 @@ const RootRoute = () => {
 function App() {
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display transition-colors duration-300">
+      <Toaster position="top-right" />
       <AuthProvider>
         <BrowserRouter>
           <Routes>
@@ -36,6 +39,7 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/chatbot" element={<ChatBot />} />
             </Route>
 
             {/* If authenticated but missing onboarding details, ProtectedRoute redirects here */}

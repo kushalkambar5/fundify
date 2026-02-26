@@ -1,12 +1,12 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import profileImg from "../assets/profile.png";
+import logo from "../assets/logo.png";
 
 export default function DashboardNavbar() {
   const { user } = useAuth();
   const location = useLocation();
-
-  const avatarUrl = "https://img.sanishtech.com/u/4d4cc69635483ba63776ec075e4bbf11.png";
 
   const navItems = [
     { label: "Dashboard", path: "/dashboard" },
@@ -19,10 +19,12 @@ export default function DashboardNavbar() {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Left: Logo + Name */}
         <Link to="/dashboard" className="flex items-center gap-3 group">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-400 flex items-center justify-center shadow-md shadow-emerald-200 group-hover:shadow-lg group-hover:shadow-emerald-300 transition-all duration-300">
-            <span className="material-symbols-outlined text-white text-2xl font-bold">
-              query_stats
-            </span>
+          <div className="h-10 w-10 rounded-xl overflow-hidden bg-white shadow-md shadow-emerald-200 border border-emerald-100 flex items-center justify-center p-1 group-hover:shadow-lg group-hover:shadow-emerald-300 transition-all duration-300">
+            <img
+              src={logo}
+              alt="Fundify Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <span className="text-slate-900 text-2xl font-black tracking-tight group-hover:text-emerald-600 transition-colors duration-200">
             Fundify
@@ -30,7 +32,7 @@ export default function DashboardNavbar() {
         </Link>
 
         {/* Center: Navigation */}
-        <nav className="hidden md:flex items-center gap-1 bg-emerald-50 rounded-xl p-1">
+        <nav className="hidden md:flex items-center gap-1 bg-emerald-50 rounded-full p-1 border border-emerald-100">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -38,12 +40,12 @@ export default function DashboardNavbar() {
                 key={item.path}
                 to={item.path}
                 className={`
-                  relative px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-200
+                  relative px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200
                   ${
                     isActive
                       ? "bg-emerald-500 text-white shadow-sm shadow-emerald-200"
                       : "text-slate-600 hover:text-emerald-700 hover:bg-emerald-100"
-                  }
+                  } btn-hover-animate
                 `}
               >
                 {item.label}
@@ -52,14 +54,17 @@ export default function DashboardNavbar() {
           })}
         </nav>
 
-        {/* Right: Profile Avatar */}
-        <Link to="/profile" className="group relative" title="Go to Profile">
-          <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-emerald-200 group-hover:ring-emerald-400 transition-all duration-200 group-hover:scale-105">
+        {/* Right: Profile Icon */}
+        <Link
+          to="/profile"
+          className="group relative btn-hover-animate hover:-translate-y-1"
+          title="Go to Profile"
+        >
+          <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-emerald-200 group-hover:ring-emerald-400 transition-all duration-200 flex items-center justify-center bg-emerald-50">
             <img
+              src={profileImg}
               alt="Profile"
-              src={avatarUrl}
-              className="h-full w-full object-cover"
-              referrerPolicy="no-referrer"
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
             />
           </div>
           <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-white" />

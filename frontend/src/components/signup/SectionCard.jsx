@@ -9,10 +9,11 @@ function SectionCard({
   error,
   onSave,
   children,
-  iconBg = "bg-blue-50",
-  iconColor = "text-blue-600",
+  iconBg = "bg-emerald-50",
+  iconColor = "text-emerald-600",
   headerAction,
   saveBtnText,
+  isModified = true,
 }) {
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm flex flex-col justify-center">
@@ -35,7 +36,7 @@ function SectionCard({
         <div className="flex items-center gap-4">
           {headerAction}
           {saved && (
-            <div className="flex items-center gap-1 bg-green-50 text-emerald-600 px-2 py-1 rounded text-[10px] font-bold tracking-wider">
+            <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2 py-1 rounded text-[10px] font-bold tracking-wider">
               <span className="material-symbols-outlined text-[12px]">
                 check_circle
               </span>
@@ -57,11 +58,11 @@ function SectionCard({
       <div className="pt-6 mt-4 border-t border-slate-50">
         <button
           onClick={onSave}
-          disabled={loading || saved}
+          disabled={loading || saved || !isModified}
           className={`w-full text-white font-bold py-3.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm ${
-            loading || saved
+            loading || saved || !isModified
               ? "bg-slate-300 cursor-not-allowed"
-              : "bg-[#1A202C] hover:bg-slate-800"
+              : "bg-emerald-500 hover:bg-emerald-600"
           }`}
         >
           {loading ? (

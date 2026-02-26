@@ -33,10 +33,6 @@ const financialHealthScoreSchema = new mongoose.Schema(
         required: true,
       },
     },
-    generatedAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   { timestamps: true },
 );
