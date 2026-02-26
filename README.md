@@ -1,7 +1,8 @@
 <p align="center">
   <h1 align="center"><img src="frontend/public/logo.png" alt="Fundify Logo" width="40" style="vertical-align: middle;" /> Fundify</h1>
   <p align="center">
-    <strong>Kushal B K & Bhuvan Rai</strong>
+    <strong>DEVELOPERS - Kushal B K & Bhuvan Rai</strong>
+    <br/>
     <strong>AI-Powered Personal Finance Intelligence Platform</strong>
   </p>
   <p align="center">
